@@ -1,5 +1,16 @@
 #include "display.hpp"
 
+
+/* 
+  U8G2_<controller>_<display>_<memory>_<communication> 
+  memory
+    "1"	one page
+    "2"	two pages
+    "f"	full frame buffer
+  communication
+    "SW SPI"
+
+*/
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
 
 TaskHandle_t DisplayTask;

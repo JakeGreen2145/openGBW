@@ -45,6 +45,9 @@ class MenuItem
 #define ROTARY_ENCODER_VCC_PIN -1
 #define ROTARY_ENCODER_STEPS 4
 
+#define BOOT_BUTTON 0
+#define ONBOARD_LED 2
+
 extern double scaleWeight;
 extern unsigned long scaleLastUpdatedAt;
 extern unsigned long lastSignificantWeightChangeAt;

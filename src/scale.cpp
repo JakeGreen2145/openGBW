@@ -15,6 +15,7 @@ AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, 
 
 TaskHandle_t ScaleTask;
 TaskHandle_t ScaleStatusTask;
+TaskHandle_t ButtonLedTask;
 
 double scaleWeight = 0; //current weight
 double setWeight = 0; //desired amount of coffee
@@ -37,6 +38,12 @@ int encoderDir = 1;
 bool greset = false;
 
 bool newOffset = false;
+
+bool ledState = LOW;
+bool buttonState = HIGH;
+bool lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
 
 int currentMenuItem = 0;
 int currentSetting;
@@ -408,6 +415,29 @@ void scaleStatusLoop(void *p) {
 }
 
 
+void buttonLoop(void *p) {
+  while(true) {
+    int reading = digitalRead(BOOT_BUTTON);
+    if (reading != lastButtonState) {
+      lastDebounceTime = millis();
+    }
+
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+      if (reading != buttonState) {
+        buttonState = reading;
+
+        if (buttonState == LOW) {
+          // Toggle the LED state when the button is pressed
+          ledState = !ledState;
+          digitalWrite(ONBOARD_LED, ledState ? HIGH : LOW);
+        }
+      }
+    }
+
+    lastButtonState = reading;
+  }
+}
+
 
 void setupScale() {
   rotaryEncoder.begin();
@@ -431,6 +461,9 @@ void setupScale() {
 
   pinMode(GRINDER_ACTIVE_PIN, OUTPUT);
   digitalWrite(GRINDER_ACTIVE_PIN, 0);
+
+  pinMode(ONBOARD_LED, OUTPUT);
+  pinMode(BOOT_BUTTON, INPUT);
 
   preferences.begin("scale", false);
   
@@ -461,5 +494,14 @@ void setupScale() {
       NULL,  /* Task input parameter */
       0,  /* Priority of the task */
       &ScaleStatusTask,  /* Task handle. */
+      1);            /* Core where the task should run */
+
+  xTaskCreatePinnedToCore(
+      buttonLoop, /* Function to implement the task */
+      "ButtonLed", /* Name of the task */
+      10000,  /* Stack size in words */
+      NULL,  /* Task input parameter */
+      1,  /* Priority of the task */
+      &ButtonLedTask,  /* Task handle. */
       1);            /* Core where the task should run */
 }
