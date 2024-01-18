@@ -51,6 +51,7 @@ class MenuItem
 extern double scaleWeight;
 extern unsigned long scaleLastUpdatedAt;
 extern unsigned long lastSignificantWeightChangeAt;
+extern unsigned long lastEncoderActionAt;
 extern unsigned long lastTareAt;
 extern bool scaleReady;
 extern int scaleStatus;

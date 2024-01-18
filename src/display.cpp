@@ -203,7 +203,8 @@ void updateDisplay( void * parameter) {
 
   for(;;) {
     u8g2.clearBuffer();
-    if (millis() - lastSignificantWeightChangeAt > SLEEP_AFTER_MS) {
+    // Set screen to sleep if timeout is reached. Wake on scale change or encoder action.
+    if ((millis() - lastSignificantWeightChangeAt > SLEEP_AFTER_MS) && (millis() - lastEncoderActionAt > SLEEP_AFTER_MS)) {
       u8g2.sendBuffer();
       delay(100);
       continue;

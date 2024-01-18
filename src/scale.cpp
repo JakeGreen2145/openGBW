@@ -28,6 +28,7 @@ MathBuffer<double, 100> weightHistory;
 
 unsigned long scaleLastUpdatedAt = 0;
 unsigned long lastSignificantWeightChangeAt = 0;
+unsigned long lastEncoderActionAt = 0;
 unsigned long lastTareAt = 0; // if 0, should tare load cell, else represent when it was last tared
 bool scaleReady = false;
 int scaleStatus = STATUS_EMPTY;
@@ -66,6 +67,7 @@ void rotary_onButtonClick()
   {
     return;
   }
+  lastEncoderActionAt = millis();
   if(scaleStatus == STATUS_EMPTY){
     scaleStatus = STATUS_IN_MENU;
     currentMenuItem = 0;
@@ -139,7 +141,8 @@ void rotary_onButtonClick()
     else if (currentSetting == 1)
     {
       preferences.begin("scale", false);
-      double newCalibrationValue = preferences.getDouble("calibration", newCalibrationValue) * (scaleWeight / 100);
+      double newCalibrationValue = preferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
+      Serial.print("New scale factor set to: ");
       Serial.println(newCalibrationValue);
       preferences.putDouble("calibration", newCalibrationValue);
       preferences.end();
@@ -195,6 +198,8 @@ void rotary_loop()
 {
   if (rotaryEncoder.encoderChanged())
   {
+    lastEncoderActionAt = millis();
+    // Serial.println("encoder changed");
     if(scaleStatus == STATUS_EMPTY){
         int newValue = rotaryEncoder.readEncoder();
         Serial.print("Value: ");
@@ -416,7 +421,7 @@ void scaleStatusLoop(void *p) {
 
 
 void buttonLoop(void *p) {
-  while(true) {
+  for(;;) {
     int reading = digitalRead(BOOT_BUTTON);
     if (reading != lastButtonState) {
       lastDebounceTime = millis();
@@ -427,6 +432,7 @@ void buttonLoop(void *p) {
         buttonState = reading;
 
         if (buttonState == LOW) {
+          Serial.println("Button pressed");
           // Toggle the LED state when the button is pressed
           ledState = !ledState;
           digitalWrite(ONBOARD_LED, ledState ? HIGH : LOW);
@@ -501,7 +507,7 @@ void setupScale() {
       "ButtonLed", /* Name of the task */
       10000,  /* Stack size in words */
       NULL,  /* Task input parameter */
-      1,  /* Priority of the task */
+      0,  /* Priority of the task */
       &ButtonLedTask,  /* Task handle. */
       1);            /* Core where the task should run */
 }
