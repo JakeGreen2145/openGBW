@@ -4,31 +4,30 @@ This Project extends and adapts the original by Guillaume Besson
 
 More info: https://besson.co/projects/coffee-grinder-smart-scale
 
+as well as the openGBW adaptation by jb-xyz
 
-This mod will add GBW functionality to basically any coffe grinder that can be started and stopped manually.
+More info: https://github.com/jb-xyz/openGBW
+
+
+This mod will add GBW functionality and profiles to basically any coffe grinder that can be started and stopped manually.
 
 The included 3D Models are adapted to the Eureka Mignon XL, but the electronics can be used for any Scale.
 
 -----------
 
-### Differences to the original
+### Differences to jb-xyz's openGBW:
 
-- added a rotary encoder to select weight and navigate menus
-- made everything user configurable without having to compile your custom firmware
-- dynamically adjust the weight offset after each grind
-- added relay for greater compatibility
-- added different ways to activate the grinder
-- added scale only mode
+- Enabled rotary encoder to wake the scale from sleep
 
 -----------
 
 ### Getting started
 
-1) 3D print the included models for a Eureka Mignon XL or design your own
+1) 3D print the included models or design your own
 2) flash the firmware onto an ESP32
 3) connect the display, relay, load cell and rotary encoder to the ESP32 according to the wiring instructions
 4) go into the menu by pressing the button of the rotary encoder and set your initial offset. -2g is a good enough starting value for a Mignon XL
-5) if you're using the Mignon's push button to activate the grinder set grinding mode to impulse. If you're connected directly to the motor relay use continuous.
+5) if you're using the grinder's push button to activate the grinder set grinding mode to impulse. If you're connected directly to the motor relay use continuous.
 6) if you only want to use the scale to check your weight when single dosing, set scale mode to scale only. This will not trigger any relay switching and start a timer when the weight begins to increase. If you'd like to build your own brew scale with timer, this is also the mode to use.
 7) calibrate your load cell by placing a 100g weight on it and following the instructions in the menu
 8) set your dosing cup weight
@@ -84,14 +83,20 @@ The included 3D Models are adapted to the Eureka Mignon XL, but the electronics 
 
 ### BOM
 
-1x ESP32  
-1x HX711 load cell amplifier  
-1x 0.9" OLED Display  
-1x KY-040 rotary encoder  
-1x 500g load cell 60 x 15,8 x 6,7 https://www.amazon.de/gp/product/B019JO9BWK/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1  
-
-various jumper cables  
-a few WAGO or similar connectors
+- 1x ESP32
+    - https://www.amazon.com/ESP-WROOM-32-Development-Microcontroller-Integrated-Compatible/dp/B08D5ZD528?th=1
+- 1x HX711 load cell amplifier
+    - https://www.amazon.com/dp/B0BLND4VF6?psc=1&ref=ppx_yo2ov_dt_b_product_details
+- 1x 0.96" 128x64 OLED I2C Display
+    - https://www.amazon.com/dp/B09T6SJBV5?ref=ppx_yo2ov_dt_b_product_details&th=
+- 1x KY-040 rotary encoder
+    - https://www.amazon.com/WayinTop-Degree-Encoder-Development-Arduino/dp/B07T3672VK/ref=sr_1_1
+    - ensure you get rotary encoders with all of their pull-up resistors, otherwise functionality like clicking the knob may be broken
+- 1x 500g load cell, dimensions 47 x 12 x 6mm (L*W*T)
+    - https://www.amazon.com/uxcell-Weighing-Electronic-Balance-Sensor/dp/B07NRTJCFD/ref=sr_1_1 
+    - note that the load cell is harder to find than other components on Amazon and sizes can vary.
+- various jumper cables  
+- a few WAGO or similar connectors
 
 -----------
 
@@ -103,12 +108,16 @@ Eureka XL: https://thangs.com/designer/jbear-xyz/3d-model/Eureka%20Mignon%20XL%2
 
 These _should_ fit any grinder in the Mignon line up as far as I can tell.
 
+**Baratza Sette models coming soon!**
+
 There's also STLs for a universal scale in the repo, though it is mostly meant as a starting off point to create your own. You can use the provided files, but you'll need to print an external enclosure for the ESP32, relay and any other components your setup might need.
 
 ### Todo:
-
-- ~add option to change grind start/stop behaviour. Right now it pulses for 50ms, this works if its hooked up to the push button of a Eureka grinder. Other models might need constant input while grinding~ done
-- add mounting options and cable routing channels to base
+- menu refactor with additional settings
+- grind profiles V1 with weight adjustments
 - more detailed instructions (with pictures!)
-- other grinders?
-- ???
+- 3D Models for Baratza Sette 30, 270, and 270 wi
+- upgraded screen and improved UI
+- add stepper motor control for grind size adjustment
+- add distribution mechanism and control
+- Grind profiles V2 for one touch grind size and weight adjustment
