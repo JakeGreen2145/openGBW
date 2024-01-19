@@ -19,9 +19,14 @@ void setup() {
   Serial.begin(115200);
   while(!Serial){delay(100);}
 
-  
+  // Display should handle frontend only
   setupDisplay();
+
+  // Scale should handle load cell functions only
   setupScale();
+
+  // Menu handles backend settings and tracking state
+  // TODO: add more classes for I/O as necessary
 
   Serial.println();
   Serial.println("******************************************************");

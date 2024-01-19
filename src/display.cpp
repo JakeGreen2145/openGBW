@@ -217,7 +217,7 @@ void updateDisplay( void * parameter) {
       u8g2.setFontPosTop();
       u8g2.drawStr(0, 20, "SCALE ERROR");
     } else {
-      if (scaleStatus == STATUS_GRINDING_IN_PROGRESS) {
+      if (grinderState == STATUS_GRINDING_IN_PROGRESS) {
         u8g2.setFontPosTop();
         u8g2.setFont(u8g2_font_7x13_tr);
         CenterPrintToScreen("Grinding...", 0);
@@ -243,7 +243,7 @@ void updateDisplay( void * parameter) {
         u8g2.setFont(u8g2_font_7x13_tr);
         snprintf(buf, sizeof(buf), "%3.1fs", startedGrindingAt > 0 ? (double)(millis() - startedGrindingAt) / 1000 : 0);
         CenterPrintToScreen(buf, 64);
-      } else if (scaleStatus == STATUS_EMPTY) {
+      } else if (grinderState == STATUS_EMPTY) {
         u8g2.setFontPosTop();
         u8g2.setFont(u8g2_font_7x13_tr);
         CenterPrintToScreen("Weight:", 0);
@@ -261,7 +261,7 @@ void updateDisplay( void * parameter) {
         LeftPrintToScreen(buf2, 50);
 
         
-      } else if (scaleStatus == STATUS_GRINDING_FAILED) {
+      } else if (grinderState == STATUS_GRINDING_FAILED) {
 
         u8g2.setFontPosTop();
         u8g2.setFont(u8g2_font_7x14B_tf);
@@ -271,7 +271,7 @@ void updateDisplay( void * parameter) {
         u8g2.setFont(u8g2_font_7x13_tr);
         CenterPrintToScreen("Press the balance", 32);
         CenterPrintToScreen("to reset", 42);
-      } else if (scaleStatus == STATUS_GRINDING_FINISHED) {
+      } else if (grinderState == STATUS_GRINDING_FINISHED) {
 
         u8g2.setFontPosTop();
         u8g2.setFont(u8g2_font_7x13_tr);
@@ -300,11 +300,11 @@ void updateDisplay( void * parameter) {
         snprintf(buf, sizeof(buf), "%3.1fs", (double)(finishedGrindingAt - startedGrindingAt) / 1000);
         CenterPrintToScreen(buf, 64);
       }
-      else if (scaleStatus == STATUS_IN_MENU)
+      else if (grinderState == STATUS_IN_MENU)
       {
         showMenu();
       }
-      else if (scaleStatus == STATUS_IN_SUBMENU)
+      else if (grinderState == STATUS_IN_SUBMENU)
       {
         showSetting();
       }
