@@ -1,15 +1,16 @@
 #include "Menu.hpp"
 #include <string>
 
-// Initially menu will be closed
+
+// ------- Initialize static vars -------
 template <typename T>
 MenuId Menu<T>::activeMenu = NONE;
 
 template <typename T>
-AiEsp32RotaryEncoder Menu<T>::rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
+GrinderState Menu<T>::grinderState = STATUS_EMPTY;
 
-template <typename T>
-int Menu<T>::encoderValue = 0;
+// template <typename T>
+// int Menu<T>::encoderValue = 0;
 // Initially null
 // template <typename T>
 // Menu<T>& Menu<T>::instance = Menu();
@@ -28,18 +29,25 @@ int Menu<T>::encoderValue = 0;
 //     return instance;
 // }
 
-// setters
+
+// ------- Setters -------
 template <typename T>
 void Menu<T>::setValue(T newValue) {
     value = newValue;
 }
 
 template <typename T>
-void Menu<T>::setActiveMenu(MenuId activeMenu) {
-    this->activeMenu = activeMenu;
+void Menu<T>::setActiveMenu(MenuId newActiveMenu) {
+    activeMenu = newActiveMenu;
 }
 
-// Getter method to retrieve the current value
+template <typename T>
+void Menu<T>::setGrinderState(GrinderState newGrinderState) {
+    grinderState = newGrinderState;
+}
+
+
+// ------- Getters ------- 
 template <typename T>
 T Menu<T>::getValue() const {
     return value;
@@ -48,5 +56,10 @@ T Menu<T>::getValue() const {
 template <typename T>
 MenuId Menu<T>::getActiveMenu() {
     return activeMenu;
+}
+
+template <typename T>
+GrinderState Menu<T>::getGrinderState() {
+    return grinderState;
 }
 

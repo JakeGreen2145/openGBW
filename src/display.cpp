@@ -48,25 +48,22 @@ void RightPrintToScreen(char const *str, u8g2_uint_t y)
   u8g2.print(str);
 }
 
-void showMenu(){
-  int prevIndex = (currentMenuItem - 1) % menuItemsCount;
-  int nextIndex = (currentMenuItem + 1) % menuItemsCount;
+void showMenu() {
+    MainMenu mainMenu = MainMenu::getMainMenu();
+    const char* prevName = mainMenu.getPrevMenuName();
+    const char* selectedName = mainMenu.getSelectedMenuName();
+    const char* nextName = mainMenu.getNextMenuName();
+    char buf[3];
+    u8g2.clearBuffer();
+    u8g2.setFontPosTop();
+    u8g2.setFont(u8g2_font_7x14B_tf);
+    CenterPrintToScreen("Menu", 0);
+    u8g2.setFont(u8g2_font_7x13_tr);
+    LeftPrintToScreen(prevName, 19);
+    LeftPrintActiveToScreen(selectedName, 35);
+    LeftPrintToScreen(nextName, 51);
 
-  prevIndex = prevIndex < 0 ? prevIndex + menuItemsCount : prevIndex;
-  MenuItem prev = menuItems[prevIndex];
-  MenuItem current = menuItems[currentMenuItem];
-  MenuItem next = menuItems[nextIndex];
-  char buf[3];
-  u8g2.clearBuffer();
-  u8g2.setFontPosTop();
-  u8g2.setFont(u8g2_font_7x14B_tf);
-  CenterPrintToScreen("Menu", 0);
-  u8g2.setFont(u8g2_font_7x13_tr);
-  LeftPrintToScreen(prev.menuName, 19);
-  LeftPrintActiveToScreen(current.menuName, 35);
-  LeftPrintToScreen(next.menuName, 51);
-
-  u8g2.sendBuffer();
+    u8g2.sendBuffer();
 }
 
 void showOffsetMenu(){
@@ -80,8 +77,6 @@ void showOffsetMenu(){
   CenterPrintToScreen(buf, 28);
   u8g2.sendBuffer();
 }
-
-
 
 void showScaleModeMenu()
 {
@@ -153,6 +148,7 @@ void showCalibrationMenu(){
 
 void showResetMenu()
 {
+  bool greset = false;
   char buf[16];
   u8g2.clearBuffer();
   u8g2.setFontPosTop();
@@ -173,25 +169,27 @@ void showResetMenu()
 }
 
 void showSetting(){
-  if(currentSetting == 2){
+  MenuId currentSetting = MainMenu::getMainMenu().getValue();
+
+  if(currentSetting == OFFSET){
     showOffsetMenu();
   }
-  else if(currentSetting == 0){
+  else if(currentSetting == CUP_WEIGHT_MENU){
     showCupMenu();
   }
-  else if (currentSetting == 1)
+  else if (currentSetting == CALIBRATE)
   {
     showCalibrationMenu();
   }
-  else if (currentSetting == 3)
+  else if (currentSetting == SCALE_MODE)
   {
     showScaleModeMenu();
   }
-  else if (currentSetting == 4)
+  else if (currentSetting == GRINDING_MODE)
   {
     showGrindModeMenu();
   }
-  else if (currentSetting == 6)
+  else if (currentSetting == RESET)
   {
     showResetMenu();
   }
@@ -209,6 +207,8 @@ void updateDisplay( void * parameter) {
       delay(100);
       continue;
     }
+
+    GrinderState grinderState = Menu<void*>::getGrinderState();
 
     if (scaleLastUpdatedAt == 0) {
       u8g2.setFontPosTop();
@@ -257,7 +257,12 @@ void updateDisplay( void * parameter) {
         u8g2.setFont(u8g2_font_7x13_tf);
         u8g2.setFontPosCenter();
         u8g2.setCursor(5, 50);
-        snprintf(buf2, sizeof(buf2), "Set: %3.1fg", setWeight);
+        snprintf(
+          buf2,
+          sizeof(buf2),
+          "Set: %3.1fg",
+          ClosedMenu::getClosedMenu().getValue()
+        );
         LeftPrintToScreen(buf2, 50);
 
         

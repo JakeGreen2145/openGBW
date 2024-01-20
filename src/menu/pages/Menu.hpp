@@ -1,7 +1,9 @@
 #pragma once
 
+#include <Preferences.h>
 #include <string>
 #include <AiEsp32RotaryEncoder.h>
+#include <U8g2lib.h>
 
 #define CUP_WEIGHT 70
 #define CUP_DETECTION_TOLERANCE 5 // 5 grams tolerance above or bellow cup weight to detect it
@@ -37,24 +39,23 @@ enum GrinderState {
     STATUS_IN_SUBMENU = 5
 };
 
-extern double scaleWeight;
-extern unsigned long scaleLastUpdatedAt;
-extern unsigned long lastSignificantWeightChangeAt;
+// extern double scaleWeight;
+// extern unsigned long scaleLastUpdatedAt;
+// extern unsigned long lastSignificantWeightChangeAt;
 extern unsigned long lastEncoderActionAt;
-extern unsigned long lastTareAt;
-extern bool scaleReady;
-extern GrinderState grinderState;
-extern double cupWeightEmpty;
-extern unsigned long startedGrindingAt;
-extern unsigned long finishedGrindingAt;
-extern double setWeight;
-extern double offset;
-extern bool scaleMode;
-extern bool grindMode;
-extern bool greset;
-extern int menuItemsCount;
-extern int currentMenuItem;
-extern int currentSetting;
+// extern unsigned long lastTareAt;
+// extern bool scaleReady;
+// extern double cupWeightEmpty;
+// extern unsigned long startedGrindingAt;
+// extern unsigned long finishedGrindingAt;
+// extern double setWeight;
+// extern double offset;
+// extern bool scaleMode;
+// extern bool grindMode;
+// extern bool greset;
+// extern int menuItemsCount;
+// extern int currentMenuItem;
+// extern int currentSetting;
 
 // Enum for menu IDs
 enum MenuId {
@@ -80,29 +81,28 @@ protected:
     T value;
     std::string name;
     MenuId menuId;
-    static int encoderValue;
+    // The Menu currently being shown
     static MenuId activeMenu;
-    static AiEsp32RotaryEncoder rotaryEncoder;
+    static GrinderState grinderState;
 public:
-    // Create singleton instance
-    //static Menu<T>& getMenu(T initialValue, std::string name, MenuId menuId);
-
     // Display the menu options
-    virtual void displayMenu();
+    virtual void displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2);
     // Change the value
     virtual void incrementValue(T increment);
 
     // Interaction
-    virtual void handleEncoderChange(int encoderValue, int encoderDirection);
-    virtual void handleEncoderClick();
+    virtual void handleEncoderChange(int encoderDelta);
+    virtual void handleEncoderClick(AiEsp32RotaryEncoder encoder);
 
-    // setters
+    // Setters
     void setValue(T newValue);
-    void setActiveMenu(MenuId activeMenu);
+    static void setActiveMenu(MenuId activeMenu);
+    static void setGrinderState(GrinderState grinderState);
 
     // Getters
     T getValue() const;
     static MenuId getActiveMenu();
+    static GrinderState getGrinderState();
 
     // Virtual destructor (important for polymorphic behavior)
     virtual ~Menu() {}

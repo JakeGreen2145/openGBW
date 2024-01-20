@@ -7,14 +7,10 @@ SimpleKalmanFilter kalmanFilter(0.02, 0.02, 0.01);
 
 Preferences preferences;
 
-
-AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
-
 #define ABS(a) (((a) > 0) ? (a) : ((a) * -1))
 
 TaskHandle_t ScaleTask;
 TaskHandle_t ScaleStatusTask;
-TaskHandle_t ButtonLedTask;
 
 double scaleWeight = 0; //current weight
 double setWeight = 0; //desired amount of coffee
@@ -25,246 +21,170 @@ bool grindMode = false;  //false for impulse to start/stop grinding, true for co
 bool grinderActive = false; //needed for continuous mode
 MathBuffer<double, 100> weightHistory;
 
+// TODO: get these from menu classes
+    // offset = preferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
+    // setCupWeight = preferences.getDouble("cup", (double)CUP_WEIGHT);
+    // scaleMode = preferences.getBool("scaleMode", false);
+    // grindMode = preferences.getBool("grindMode", false);
+
 unsigned long scaleLastUpdatedAt = 0;
 unsigned long lastSignificantWeightChangeAt = 0;
-unsigned long lastEncoderActionAt = 0;
 unsigned long lastTareAt = 0; // if 0, should tare load cell, else represent when it was last tared
 bool scaleReady = false;
-GrinderState grinderState = STATUS_EMPTY;
-double cupWeightEmpty = 0; //measured actual cup weight
+double cupWeightEmpty = 0; // measured actual cup weight
 unsigned long startedGrindingAt = 0;
 unsigned long finishedGrindingAt = 0;
-int encoderDir = 1;
-bool greset = false;
 
 bool newOffset = false;
-
-bool ledState = LOW;
-bool buttonState = HIGH;
-bool lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
-
-int currentMenuItem = 0;
-int currentSetting;
-int encoderValue = 0;
-int menuItemsCount = 7;
-MenuItem menuItems[7] = {
-    {1, false, "Cup weight", 1, &setCupWeight},
-    {2, false, "Calibrate", 0},
-    {3, false, "Offset", 0.1, &offset},
-    {4, false, "Scale Mode", 0},
-    {5, false, "Grinding Mode", 0},
-    {6, false, "Exit", 0},
-    {7, false, "Reset", 0}
-};
-
-void rotary_onButtonClick()
-{
-  static unsigned long lastTimePressed = 0;
-  // ignore multiple press in that time milliseconds
-  if (millis() - lastTimePressed < 500)
-  {
-    return;
-  }
-  lastEncoderActionAt = millis();
-
-  // Enter menu if currently on homepage
-  if(grinderState == STATUS_EMPTY){
-    grinderState = STATUS_IN_MENU;
-    currentMenuItem = 0;
-    rotaryEncoder.setAcceleration(0);
-  }
-  // Select currentMenuItem if in main menu
-  else if(grinderState == STATUS_IN_MENU){
-    if(currentMenuItem == 5){
-      grinderState = STATUS_EMPTY;
-      rotaryEncoder.setAcceleration(100);
-      Serial.println("Exited Menu");
-    }
-    else if (currentMenuItem == 2){
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 2;
-      Serial.println("Offset Menu");
-    }
-    else if (currentMenuItem == 0)
-    {
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 0;
-      Serial.println("Cup Menu");
-    }
-    else if (currentMenuItem == 1)
-    {
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 1;
-      Serial.println("Calibration Menu");
-    }
-    else if (currentMenuItem == 3)
-    {
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 3;
-      Serial.println("Scale Mode Menu");
-    }
-    else if (currentMenuItem == 4)
-    {
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 4;
-      Serial.println("Grind Mode Menu");
-    }
-    else if (currentMenuItem == 6)
-    {
-      grinderState = STATUS_IN_SUBMENU;
-      currentSetting = 6;
-      greset = false;
-      Serial.println("Reset Menu");
-    }
-  }
-  // handle clicks based on current menu if in submenu
-  else if(grinderState == STATUS_IN_SUBMENU){
-    if(currentSetting == 2){
-
-      preferences.begin("scale", false);
-      preferences.putDouble("offset", offset);
-      preferences.end();
-      grinderState = STATUS_IN_MENU;
-      currentSetting = -1;
-    }
-    else if (currentSetting == 0)
-    {
-      if(scaleWeight > 30){       //prevent accidental setting with no cup
-        setCupWeight = scaleWeight;
-        Serial.println(setCupWeight);
-        
-        preferences.begin("scale", false);
-        preferences.putDouble("cup", setCupWeight);
-        preferences.end();
-        grinderState = STATUS_IN_MENU;
-        currentSetting = -1;
-      }
-    }
-    else if (currentSetting == 1)
-    {
-      preferences.begin("scale", false);
-      double newCalibrationValue = preferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
-      Serial.print("New scale factor set to: ");
-      Serial.println(newCalibrationValue);
-      preferences.putDouble("calibration", newCalibrationValue);
-      preferences.end();
-      loadcell.set_scale(newCalibrationValue);
-      grinderState = STATUS_IN_MENU;
-      currentSetting = -1;
-    }
-    else if (currentSetting == 3)
-    {
-      preferences.begin("scale", false);
-      preferences.putBool("scaleMode", scaleMode);
-      preferences.end();
-      grinderState = STATUS_IN_MENU;
-      currentSetting = -1;
-    }
-    else if (currentSetting == 4)
-    {
-      preferences.begin("scale", false);
-      preferences.putBool("grindMode", grindMode);
-      preferences.end();
-      grinderState = STATUS_IN_MENU;
-      currentSetting = -1;
-    }
-    else if (currentSetting == 6)
-    {
-      if(greset){
-        preferences.begin("scale", false);
-        preferences.putDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-        setWeight = (double)COFFEE_DOSE_WEIGHT;
-        preferences.putDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
-        offset = (double)COFFEE_DOSE_OFFSET;
-        preferences.putDouble("offset", (double)COFFEE_DOSE_OFFSET);
-        setCupWeight = (double)CUP_WEIGHT;
-        preferences.putDouble("cup", (double)CUP_WEIGHT);
-        scaleMode = false;
-        preferences.putBool("scaleMode", false);
-        grindMode = false;
-        preferences.putBool("grindMode", false);
-
-        loadcell.set_scale((double)LOADCELL_SCALE_FACTOR);
-        preferences.end();
-      }
-      
-      grinderState = STATUS_IN_MENU;
-      currentSetting = -1;
-    }
-  }
-}
-
-
-
-void rotary_loop()
-{
-  if (rotaryEncoder.encoderChanged())
-  {
-    lastEncoderActionAt = millis();
-    // handle encoder change from outside menu
-    if(grinderState == STATUS_EMPTY){
-        int newValue = rotaryEncoder.readEncoder();
-        Serial.print("Value: ");
-
-        setWeight += ((float)newValue - (float)encoderValue) / 10 * encoderDir;
-
-        encoderValue = newValue;
-        Serial.println(newValue);
-        preferences.begin("scale", false);
-        preferences.putDouble("setWeight", setWeight);
-        preferences.end();
-      }
-    // handle encoder change in main menu
-    else if(grinderState == STATUS_IN_MENU){
-      int newValue = rotaryEncoder.readEncoder();
-      currentMenuItem = (currentMenuItem + (newValue - encoderValue) * -encoderDir) % menuItemsCount;
-      currentMenuItem = currentMenuItem < 0 ? menuItemsCount + currentMenuItem : currentMenuItem;
-      encoderValue = newValue;
-      Serial.println(currentMenuItem);
-    }
-    // handle encoder change in submenus
-    else if(grinderState == STATUS_IN_SUBMENU){
-      if(currentSetting == 2){ //offset menu
-        int newValue = rotaryEncoder.readEncoder();
-        Serial.print("Value: ");
-
-        offset += ((float)newValue - (float)encoderValue) * encoderDir / 100;
-        encoderValue = newValue;
-
-        if(abs(offset) >= setWeight){
-          offset = setWeight;     //prevent nonsensical offsets
-        }
-      }
-      else if(currentSetting == 3){
-        scaleMode = !scaleMode;
-      }
-      else if (currentSetting == 4)
-      {
-        grindMode = !grindMode;
-      }
-      else if (currentSetting == 6)
-      {
-        greset = !greset;
-      }
-    }
-  }
-  if (rotaryEncoder.isEncoderButtonClicked())
-  {
-    rotary_onButtonClick();
-  }
-}
-
-void readEncoderISR()
-{
-  rotaryEncoder.readEncoder_ISR();
-}
 
 void tareScale() {
   Serial.println("Taring scale");
   loadcell.tare(TARE_MEASURES);
   lastTareAt = millis();
+}
+
+void grinderToggle()
+{
+  if(!scaleMode){
+    if(grindMode){
+      grinderActive = !grinderActive;
+      digitalWrite(GRINDER_ACTIVE_PIN, grinderActive);
+    }
+    else{
+      digitalWrite(GRINDER_ACTIVE_PIN, 1);
+      delay(100);
+      digitalWrite(GRINDER_ACTIVE_PIN, 0);
+    }
+  }
+}
+
+void scaleStatusLoop(void *p) {
+  double tenSecAvg;
+  for (;;) {
+    // recalibrate scale if new calibration has been set
+    // TODO: control this from the calibrate menu
+    bool isNewScaleCalibrationSet = false;
+    if (isNewScaleCalibrationSet) {
+        preferences.begin("scale", false);
+        double newCalibrationValue = preferences.getDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
+        preferences.end();
+        loadcell.set_scale(newCalibrationValue);
+    }
+
+    tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
+    
+    // TODO: add GrinderState for sleep
+    if (ABS(tenSecAvg - scaleWeight) > SIGNIFICANT_WEIGHT_CHANGE) {
+      lastSignificantWeightChangeAt = millis();
+    }
+
+    GrinderState grinderState = Menu<void*>::getGrinderState();
+    if (grinderState == STATUS_EMPTY) {
+      if (millis() - lastTareAt > TARE_MIN_INTERVAL && ABS(tenSecAvg) > 0.2 && tenSecAvg < 3 && scaleWeight < 3) {
+        // tare if: not tared recently, more than 0.2 away from 0, less than 3 grams total (also works for negative weight)
+        lastTareAt = 0;
+      }
+
+      // Start grinding if both min and max weight detected in the past 1s are less than cup weight + detection tolerance.
+      if (ABS(weightHistory.minSince((int64_t)millis() - 1000) - setCupWeight) < CUP_DETECTION_TOLERANCE &&
+          ABS(weightHistory.maxSince((int64_t)millis() - 1000) - setCupWeight) < CUP_DETECTION_TOLERANCE)
+      {
+        // using average over last 500ms as empty cup weight
+        Serial.println("Starting grinding");
+        cupWeightEmpty = weightHistory.averageSince((int64_t)millis() - 500);
+        Menu<void*>::setGrinderState(STATUS_GRINDING_IN_PROGRESS);
+        
+        if(!scaleMode){
+          newOffset = true;
+          startedGrindingAt = millis();
+        }
+        
+        grinderToggle();
+        continue;
+      }
+    } else if (grinderState == STATUS_GRINDING_IN_PROGRESS) {
+      if (!scaleReady) {
+        
+        grinderToggle();
+        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+      }
+      //Serial.printf("Scale mode: %d\n", scaleMode);
+      //Serial.printf("Started grinding at: %d\n", startedGrindingAt);
+      //Serial.printf("Weight: %f\n", cupWeightEmpty - scaleWeight);
+      if (scaleMode && startedGrindingAt == 0 && scaleWeight - cupWeightEmpty >= 0.1)
+      {
+        Serial.printf("Started grinding at: %d\n", millis());
+        startedGrindingAt = millis();
+        continue;
+      }
+
+      if (millis() - startedGrindingAt > MAX_GRINDING_TIME && !scaleMode) {
+        Serial.println("Failed because grinding took too long");
+        
+        grinderToggle();
+        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        continue;
+      }
+
+      if (
+          millis() - startedGrindingAt > 2000 &&                                  // started grinding at least 2s ago
+          scaleWeight - weightHistory.firstValueOlderThan(millis() - 2000) < 1 && // less than a gram has been grinded in the last 2 second
+          !scaleMode)
+      {
+        Serial.println("Failed because no change in weight was detected");
+        
+        grinderToggle();
+        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        continue;
+      }
+
+      if (weightHistory.minSince((int64_t)millis() - 200) < cupWeightEmpty - CUP_DETECTION_TOLERANCE && !scaleMode) {
+        Serial.printf("Failed because weight too low, min: %f, min value: %f\n", weightHistory.minSince((int64_t)millis() - 200), CUP_WEIGHT + CUP_DETECTION_TOLERANCE);
+        
+        grinderToggle();
+        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        continue;
+      }
+      double currentOffset = offset;
+      if(scaleMode){
+        currentOffset = 0;
+      }
+      if (weightHistory.maxSince((int64_t)millis() - 200) >= cupWeightEmpty + setWeight + currentOffset) {
+        Serial.println("Finished grinding");
+        finishedGrindingAt = millis();
+        
+        grinderToggle();
+        Menu<void*>::setGrinderState(STATUS_GRINDING_FINISHED);
+        continue;
+      }
+    } else if (grinderState == STATUS_GRINDING_FINISHED) {
+      double currentWeight = weightHistory.averageSince((int64_t)millis() - 500);
+      if (scaleWeight < 5) {
+        Serial.println("Going back to empty");
+        startedGrindingAt = 0;
+        Menu<void*>::setGrinderState(STATUS_EMPTY);
+        continue;
+      }
+      else if (currentWeight != setWeight + cupWeightEmpty && millis() - finishedGrindingAt > 1500 && newOffset)
+      {
+        offset += setWeight + cupWeightEmpty - currentWeight;
+        if(ABS(offset) >= setWeight){
+          offset = COFFEE_DOSE_OFFSET;
+        }
+        preferences.begin("scale", false);
+        preferences.putDouble("offset", offset);
+        preferences.end();
+        newOffset = false;
+      }
+    } else if (grinderState == STATUS_GRINDING_FAILED) {
+      if (scaleWeight >= GRINDING_FAILED_WEIGHT_TO_RESET) {
+        Serial.println("Going back to empty");
+        Menu<void*>::setGrinderState(STATUS_EMPTY);
+        continue;
+      }
+    }
+    delay(50);
+  }
 }
 
 void updateScale( void * parameter) {
@@ -291,157 +211,23 @@ void updateScale( void * parameter) {
   }
 }
 
-void grinderToggle()
-{
-  if(!scaleMode){
-    if(grindMode){
-      grinderActive = !grinderActive;
-      digitalWrite(GRINDER_ACTIVE_PIN, grinderActive);
-    }
-    else{
-      digitalWrite(GRINDER_ACTIVE_PIN, 1);
-      delay(100);
-      digitalWrite(GRINDER_ACTIVE_PIN, 0);
-    }
-  }
-}
-
-void scaleStatusLoop(void *p) {
-  double tenSecAvg;
-  for (;;) {
-    tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
-    
-
-    if (ABS(tenSecAvg - scaleWeight) > SIGNIFICANT_WEIGHT_CHANGE) {
-      
-      lastSignificantWeightChangeAt = millis();
-    }
-
-    if (grinderState == STATUS_EMPTY) {
-      if (millis() - lastTareAt > TARE_MIN_INTERVAL && ABS(tenSecAvg) > 0.2 && tenSecAvg < 3 && scaleWeight < 3) {
-        // tare if: not tared recently, more than 0.2 away from 0, less than 3 grams total (also works for negative weight)
-        lastTareAt = 0;
-      }
-
-      if (ABS(weightHistory.minSince((int64_t)millis() - 1000) - setCupWeight) < CUP_DETECTION_TOLERANCE &&
-          ABS(weightHistory.maxSince((int64_t)millis() - 1000) - setCupWeight) < CUP_DETECTION_TOLERANCE)
-      {
-        // using average over last 500ms as empty cup weight
-        Serial.println("Starting grinding");
-        cupWeightEmpty = weightHistory.averageSince((int64_t)millis() - 500);
-        grinderState = STATUS_GRINDING_IN_PROGRESS;
-        
-        if(!scaleMode){
-          newOffset = true;
-          startedGrindingAt = millis();
-        }
-        
-        grinderToggle();
-        continue;
-      }
-    } else if (grinderState == STATUS_GRINDING_IN_PROGRESS) {
-      if (!scaleReady) {
-        
-        grinderToggle();
-        grinderState = STATUS_GRINDING_FAILED;
-      }
-      //Serial.printf("Scale mode: %d\n", scaleMode);
-      //Serial.printf("Started grinding at: %d\n", startedGrindingAt);
-      //Serial.printf("Weight: %f\n", cupWeightEmpty - scaleWeight);
-      if (scaleMode && startedGrindingAt == 0 && scaleWeight - cupWeightEmpty >= 0.1)
-      {
-        Serial.printf("Started grinding at: %d\n", millis());
-        startedGrindingAt = millis();
-        continue;
-      }
-
-      if (millis() - startedGrindingAt > MAX_GRINDING_TIME && !scaleMode) {
-        Serial.println("Failed because grinding took too long");
-        
-        grinderToggle();
-        grinderState = STATUS_GRINDING_FAILED;
-        continue;
-      }
-
-      if (
-          millis() - startedGrindingAt > 2000 &&                                  // started grinding at least 2s ago
-          scaleWeight - weightHistory.firstValueOlderThan(millis() - 2000) < 1 && // less than a gram has been grinded in the last 2 second
-          !scaleMode)
-      {
-        Serial.println("Failed because no change in weight was detected");
-        
-        grinderToggle();
-        grinderState = STATUS_GRINDING_FAILED;
-        continue;
-      }
-
-      if (weightHistory.minSince((int64_t)millis() - 200) < cupWeightEmpty - CUP_DETECTION_TOLERANCE && !scaleMode) {
-        Serial.printf("Failed because weight too low, min: %f, min value: %f\n", weightHistory.minSince((int64_t)millis() - 200), CUP_WEIGHT + CUP_DETECTION_TOLERANCE);
-        
-        grinderToggle();
-        grinderState = STATUS_GRINDING_FAILED;
-        continue;
-      }
-      double currentOffset = offset;
-      if(scaleMode){
-        currentOffset = 0;
-      }
-      if (weightHistory.maxSince((int64_t)millis() - 200) >= cupWeightEmpty + setWeight + currentOffset) {
-        Serial.println("Finished grinding");
-        finishedGrindingAt = millis();
-        
-        grinderToggle();
-        grinderState = STATUS_GRINDING_FINISHED;
-        continue;
-      }
-    } else if (grinderState == STATUS_GRINDING_FINISHED) {
-      double currentWeight = weightHistory.averageSince((int64_t)millis() - 500);
-      if (scaleWeight < 5) {
-        Serial.println("Going back to empty");
-        startedGrindingAt = 0;
-        grinderState = STATUS_EMPTY;
-        continue;
-      }
-      else if (currentWeight != setWeight + cupWeightEmpty && millis() - finishedGrindingAt > 1500 && newOffset)
-      {
-        offset += setWeight + cupWeightEmpty - currentWeight;
-        if(ABS(offset) >= setWeight){
-          offset = COFFEE_DOSE_OFFSET;
-        }
-        preferences.begin("scale", false);
-        preferences.putDouble("offset", offset);
-        preferences.end();
-        newOffset = false;
-      }
-    } else if (grinderState == STATUS_GRINDING_FAILED) {
-      if (scaleWeight >= GRINDING_FAILED_WEIGHT_TO_RESET) {
-        Serial.println("Going back to empty");
-        grinderState = STATUS_EMPTY;
-        continue;
-      }
-    }
-    rotary_loop();
-    delay(50);
-  }
-}
-
 
 void setupScale() {
-  rotaryEncoder.begin();
-  rotaryEncoder.setup(readEncoderISR);
-  // set boundaries and if values should cycle or not
-  // in this example we will set possible values between 0 and 1000;
-  bool circleValues = true;
-  rotaryEncoder.setBoundaries(-10000, 10000, circleValues); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  // rotaryEncoder.begin();
+  // rotaryEncoder.setup(readEncoderISR);
+  // // set boundaries and if values should cycle or not
+  // // in this example we will set possible values between 0 and 1000;
+  // bool circleValues = true;
+  // rotaryEncoder.setBoundaries(-10000, 10000, circleValues); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
 
-  /*Rotary acceleration introduced 25.2.2021.
-   * in case range to select is huge, for example - select a value between 0 and 1000 and we want 785
-   * without accelerateion you need long time to get to that number
-   * Using acceleration, faster you turn, faster will the value raise.
-   * For fine tuning slow down.
-   */
-  // rotaryEncoder.disableAcceleration(); //acceleration is now enabled by default - disable if you dont need it
-  rotaryEncoder.setAcceleration(100); // or set the value - larger number = more accelearation; 0 or 1 means disabled acceleration
+  // /*Rotary acceleration introduced 25.2.2021.
+  //  * in case range to select is huge, for example - select a value between 0 and 1000 and we want 785
+  //  * without accelerateion you need long time to get to that number
+  //  * Using acceleration, faster you turn, faster will the value raise.
+  //  * For fine tuning slow down.
+  //  */
+  // // rotaryEncoder.disableAcceleration(); //acceleration is now enabled by default - disable if you dont need it
+  // rotaryEncoder.setAcceleration(100); // or set the value - larger number = more accelearation; 0 or 1 means disabled acceleration
 
 
   loadcell.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
@@ -478,5 +264,6 @@ void setupScale() {
       NULL,  /* Task input parameter */
       0,  /* Priority of the task */
       &ScaleStatusTask,  /* Task handle. */
-      1);            /* Core where the task should run */
+      1  /* Core where the task should run */
+    );
 }

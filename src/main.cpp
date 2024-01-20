@@ -5,6 +5,7 @@
 
 #include "display.hpp"
 #include "scale.hpp"
+#include "./menu/MenuController.hpp"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -26,7 +27,7 @@ void setup() {
   setupScale();
 
   // Menu handles backend settings and tracking state
-  // TODO: add more classes for I/O as necessary
+  setupMenu();
 
   Serial.println();
   Serial.println("******************************************************");
