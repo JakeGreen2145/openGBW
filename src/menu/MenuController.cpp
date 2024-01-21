@@ -4,6 +4,7 @@ TaskHandle_t MenuTask;
 static AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
 MainMenu& mainMenu = MainMenu::getMainMenu(); // controls selected setting
 ClosedMenu& closedMenu = ClosedMenu::getClosedMenu(); // controls setWeight
+OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // controls grind weight offset
 static Preferences controllerPreferences;
 //double setCupWeight;
 GrinderState grinderState = STATUS_EMPTY;
@@ -21,7 +22,7 @@ int getEncoderDelta() {
     int newValue = rotaryEncoder.readEncoder();
     int delta = (newValue - encoderValue) * -encoderDir;
     encoderValue = newValue;
-    return encoderValue;
+    return delta;
 }
 
 
@@ -43,78 +44,74 @@ void rotary_onButtonClick() {
     }
     // TODO: move this logic to menu classes
     // handle clicks based on current menu if in submenu
-    // else if(grinderState == STATUS_IN_SUBMENU){
-    //     MenuId currentSetting = mainMenu.getValue();
-    //     if(currentSetting == 2) {
-    //         controllerPreferences.begin("scale", false);
-    //         controllerPreferences.putDouble("offset", offset);
-    //         controllerPreferences.end();
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //     }
-    //     else if (currentSetting == 0)
-    //     {
-    //         if(scaleWeight > 30) {       //prevent accidental setting with no cup
-    //         setCupWeight = scaleWeight;
-    //         Serial.println(setCupWeight);
+    else if(grinderState == STATUS_IN_SUBMENU){
+        MenuId activeSubmenu = DeviceState::getActiveMenu();
+        if(activeSubmenu == OFFSET) {
+            offsetMenu.handleEncoderClick(rotaryEncoder);
+        }
+        // else if (currentSetting == 0)
+        // {
+        //     if(scaleWeight > 30) {       //prevent accidental setting with no cup
+        //     setCupWeight = scaleWeight;
+        //     Serial.println(setCupWeight);
             
-    //         controllerPreferences.begin("scale", false);
-    //         controllerPreferences.putDouble("cup", setCupWeight);
-    //         controllerPreferences.end();
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //         }
-    //     }
-    //     else if (currentSetting == 1)
-    //     {
-    //         controllerPreferences.begin("scale", false);
-    //         double newCalibrationValue = controllerPreferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
-    //         Serial.print("New scale factor set to: ");
-    //         Serial.println(newCalibrationValue);
-    //         controllerPreferences.putDouble("calibration", newCalibrationValue);
-    //         controllerPreferences.end();
-    //         isNewScaleCalibrationSet = true;
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //     }
-    //     else if (currentSetting == 3)
-    //     {
-    //         controllerPreferences.begin("scale", false);
-    //         controllerPreferences.putBool("scaleMode", scaleMode);
-    //         controllerPreferences.end();
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //     }
-    //     else if (currentSetting == 4)
-    //     {
-    //         controllerPreferences.begin("scale", false);
-    //         controllerPreferences.putBool("grindMode", grindMode);
-    //         controllerPreferences.end();
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //     }
-    //     else if (currentSetting == 6)
-    //     {
-    //         if(greset){
-    //             controllerPreferences.begin("scale", false);
-    //             controllerPreferences.putDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-    //             setWeight = (double)COFFEE_DOSE_WEIGHT;
-    //             controllerPreferences.putDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
-    //             offset = (double)COFFEE_DOSE_OFFSET;
-    //             controllerPreferences.putDouble("offset", (double)COFFEE_DOSE_OFFSET);
-    //             setCupWeight = (double)CUP_WEIGHT;
-    //             controllerPreferences.putDouble("cup", (double)CUP_WEIGHT);
-    //             scaleMode = false;
-    //             controllerPreferences.putBool("scaleMode", false);
-    //             grindMode = false;
-    //             controllerPreferences.putBool("grindMode", false);
-    //             isNewScaleCalibrationSet = true;
-    //             controllerPreferences.end();
-    //         }
-    //         grinderState = STATUS_IN_MENU;
-    //         currentSetting = -1;
-    //     }
-    // }
+        //     controllerPreferences.begin("scale", false);
+        //     controllerPreferences.putDouble("cup", setCupWeight);
+        //     controllerPreferences.end();
+        //     grinderState = STATUS_IN_MENU;
+        //     currentSetting = -1;
+        //     }
+        // }
+        // else if (currentSetting == 1)
+        // {
+        //     controllerPreferences.begin("scale", false);
+        //     double newCalibrationValue = controllerPreferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
+        //     Serial.print("New scale factor set to: ");
+        //     Serial.println(newCalibrationValue);
+        //     controllerPreferences.putDouble("calibration", newCalibrationValue);
+        //     controllerPreferences.end();
+        //     isNewScaleCalibrationSet = true;
+        //     grinderState = STATUS_IN_MENU;
+        //     currentSetting = -1;
+        // }
+        // else if (currentSetting == 3)
+        // {
+        //     controllerPreferences.begin("scale", false);
+        //     controllerPreferences.putBool("scaleMode", scaleMode);
+        //     controllerPreferences.end();
+        //     grinderState = STATUS_IN_MENU;
+        //     currentSetting = -1;
+        // }
+        // else if (currentSetting == 4)
+        // {
+        //     controllerPreferences.begin("scale", false);
+        //     controllerPreferences.putBool("grindMode", grindMode);
+        //     controllerPreferences.end();
+        //     grinderState = STATUS_IN_MENU;
+        //     currentSetting = -1;
+        // }
+        // else if (currentSetting == 6)
+        // {
+        //     if(greset){
+        //         controllerPreferences.begin("scale", false);
+        //         controllerPreferences.putDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
+        //         setWeight = (double)COFFEE_DOSE_WEIGHT;
+        //         controllerPreferences.putDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
+        //         offset = (double)COFFEE_DOSE_OFFSET;
+        //         controllerPreferences.putDouble("offset", (double)COFFEE_DOSE_OFFSET);
+        //         setCupWeight = (double)CUP_WEIGHT;
+        //         controllerPreferences.putDouble("cup", (double)CUP_WEIGHT);
+        //         scaleMode = false;
+        //         controllerPreferences.putBool("scaleMode", false);
+        //         grindMode = false;
+        //         controllerPreferences.putBool("grindMode", false);
+        //         isNewScaleCalibrationSet = true;
+        //         controllerPreferences.end();
+        //     }
+        //     grinderState = STATUS_IN_MENU;
+        //     currentSetting = -1;
+        // }
+    }
 }
 
 void rotary_onChange() {
@@ -130,15 +127,12 @@ void rotary_onChange() {
     }
     // handle encoder change in submenus
     else if(grinderState == STATUS_IN_SUBMENU) {
+        MenuId activeSubmenu = DeviceState::getActiveMenu();
         // TODO: move this to classes
-        // if(currentSetting == 2) { //offset menu
-        //     Serial.print("Value: ");
-        //     offset += ((float)encoderDelta) / 100;
-        //     if(abs(offset) >= setWeight) {
-        //         offset = setWeight;     //prevent nonsensical offsets
-        //     }
-        // }
-        // // Toggleable Settings
+        if(activeSubmenu == OFFSET) { //offset menu
+            offsetMenu.handleEncoderChange(encoderDelta);
+        }
+        // Toggleable Settings
         // else if(currentSetting == 3) {
         //     scaleMode = !scaleMode;
         // }
@@ -166,8 +160,6 @@ void rotary_loop(void *p) {
 
 
 void setupMenu() {
-    // 1) get all singleton menu classes
-    // mainMenu = MainMenu::getMainMenu();
     // 2) setup I/O
     rotaryEncoder.begin();
     rotaryEncoder.setup(readEncoderISR);

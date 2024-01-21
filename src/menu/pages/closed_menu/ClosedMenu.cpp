@@ -4,7 +4,7 @@
 Preferences controllerPreferences;
 
 ClosedMenu::ClosedMenu(){
-    this -> value = NONE;
+    this -> value = 18.0;
     this -> name = "Closed Menu";
     this -> menuId = MAIN_MENU;
 };

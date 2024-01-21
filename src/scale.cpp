@@ -15,7 +15,7 @@ TaskHandle_t ScaleStatusTask;
 double scaleWeight = 0; //current weight
 double setWeight = 0; //desired amount of coffee
 double setCupWeight = 0; //cup weight set by user
-double offset = 0; //stop x grams prios to set weight
+double offset = 0; //stop x grams prior to set weight
 bool scaleMode = false; //use as regular scale with timer if true
 bool grindMode = false;  //false for impulse to start/stop grinding, true for continuous on while grinding
 bool grinderActive = false; //needed for continuous mode
@@ -70,6 +70,13 @@ void scaleStatusLoop(void *p) {
         preferences.end();
         loadcell.set_scale(newCalibrationValue);
     }
+
+    // Update setWeight
+    setWeight = ClosedMenu::getClosedMenu().getValue();
+    // Update offset
+    // TODO: add an offsetMenu instance since it's used frequently
+    offset = OffsetMenu::getOffsetMenu().getValue();
+    
 
     tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
     
@@ -167,10 +174,12 @@ void scaleStatusLoop(void *p) {
       }
       else if (currentWeight != setWeight + cupWeightEmpty && millis() - finishedGrindingAt > 1500 && newOffset)
       {
-        offset += setWeight + cupWeightEmpty - currentWeight;
+        // TODO: move this to an offsetMenu function. Something like updateOffsetAfterGrind()
+        offset = offset + setWeight + cupWeightEmpty - currentWeight;
         if(ABS(offset) >= setWeight){
           offset = COFFEE_DOSE_OFFSET;
         }
+        OffsetMenu::getOffsetMenu().setValue(offset);
         preferences.begin("scale", false);
         preferences.putDouble("offset", offset);
         preferences.end();
