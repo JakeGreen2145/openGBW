@@ -5,6 +5,8 @@
 #include <AiEsp32RotaryEncoder.h>
 #include <U8g2lib.h>
 
+#include "../DeviceState.hpp"
+
 #define CUP_WEIGHT 70
 #define CUP_DETECTION_TOLERANCE 5 // 5 grams tolerance above or bellow cup weight to detect it
 
@@ -30,14 +32,7 @@
 #define ROTARY_ENCODER_VCC_PIN -1
 #define ROTARY_ENCODER_STEPS 4
 
-enum GrinderState {
-    STATUS_EMPTY = 0,
-    STATUS_GRINDING_IN_PROGRESS = 1,
-    STATUS_GRINDING_FINISHED = 2,
-    STATUS_GRINDING_FAILED = 3,
-    STATUS_IN_MENU = 4,
-    STATUS_IN_SUBMENU = 5
-};
+
 
 // extern double scaleWeight;
 // extern unsigned long scaleLastUpdatedAt;
@@ -57,53 +52,54 @@ extern unsigned long lastEncoderActionAt;
 // extern int currentMenuItem;
 // extern int currentSetting;
 
-// Enum for menu IDs
-enum MenuId {
-    NONE = 0,
-    MAIN_MENU = 1,
-    CUP_WEIGHT_MENU = 2,
-    CALIBRATE = 3,
-    OFFSET = 4,
-    SCALE_MODE = 5,
-    GRINDING_MODE = 6,
-    SLEEP = 7,
-    EXIT = 8,
-    RESET = 9
+class BaseMenu {
+    // Define menu methods here that are independent of the value type.
+    protected:
+        std::string name;
+        MenuId menuId;
+    public:
+        // Display the menu options
+        virtual void displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) = 0;
+
+        // Interaction
+        virtual void handleEncoderChange(int encoderDelta) = 0;
+        virtual void handleEncoderClick(AiEsp32RotaryEncoder encoder) = 0;
+
+        // Virtual destructor (important for polymorphic behavior)
+        virtual ~BaseMenu() {};
 };
+
+
 
 template <typename T>
-class Menu {
-private:
-    // Constructor is private. setupMenu should be used to initialize menus
-    // Menu(T initialValue, std::string name, MenuId menuId);
-    // static Menu<T> instance;
-protected:
-    T value;
-    std::string name;
-    MenuId menuId;
-    // The Menu currently being shown
-    static MenuId activeMenu;
-    static GrinderState grinderState;
-public:
-    // Display the menu options
-    virtual void displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2);
-    // Change the value
-    virtual void incrementValue(T increment);
+class Menu : public BaseMenu {
+    private:
+        // Constructor is private. setupMenu should be used to initialize menus
+        // Menu(T initialValue, std::string name, MenuId menuId);
+        // static Menu<T> instance;
+    protected:
+        T value;
+    public:
+        // Setters
+        void setValue(T newValue);
 
-    // Interaction
-    virtual void handleEncoderChange(int encoderDelta);
-    virtual void handleEncoderClick(AiEsp32RotaryEncoder encoder);
+        // Getters
+        T getValue() const;
 
-    // Setters
-    void setValue(T newValue);
-    static void setActiveMenu(MenuId activeMenu);
-    static void setGrinderState(GrinderState grinderState);
-
-    // Getters
-    T getValue() const;
-    static MenuId getActiveMenu();
-    static GrinderState getGrinderState();
-
-    // Virtual destructor (important for polymorphic behavior)
-    virtual ~Menu() {}
+        // Virtual destructor
+        virtual ~Menu() {};
 };
+
+
+// ------- Setters -------
+template <typename T>
+void Menu<T>::setValue(T newValue) {
+    value = newValue;
+}
+
+
+// ------- Getters ------- 
+template <typename T>
+T Menu<T>::getValue() const {
+    return value;
+}

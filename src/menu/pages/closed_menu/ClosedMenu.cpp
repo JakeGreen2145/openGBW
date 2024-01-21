@@ -9,8 +9,9 @@ ClosedMenu::ClosedMenu(){
     this -> menuId = MAIN_MENU;
 };
 
+ClosedMenu ClosedMenu::instance = ClosedMenu();
+
 ClosedMenu& ClosedMenu::getClosedMenu() {
-    instance = ClosedMenu();
     return instance;
 }
 
@@ -20,10 +21,6 @@ void ClosedMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     // setActiveMenu(menuId);
     // set global variables
     // TODO: move away from these
-}
-
-void ClosedMenu::incrementValue(double increment) {
-    // remove me
 }
 
 // TODO: remove this or remove the increment function above
@@ -37,7 +34,7 @@ void ClosedMenu::handleEncoderChange(int encoderDelta) {
 }
 
 void ClosedMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
-    Menu<void*>::setGrinderState(STATUS_IN_MENU);
+    DeviceState::setGrinderState(STATUS_IN_MENU);
     rotaryEncoder.setAcceleration(0);
-    setActiveMenu(MAIN_MENU);
+    DeviceState::setActiveMenu(MAIN_MENU);
 }

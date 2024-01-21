@@ -78,7 +78,7 @@ void scaleStatusLoop(void *p) {
       lastSignificantWeightChangeAt = millis();
     }
 
-    GrinderState grinderState = Menu<void*>::getGrinderState();
+    GrinderState grinderState = DeviceState::getGrinderState();
     if (grinderState == STATUS_EMPTY) {
       if (millis() - lastTareAt > TARE_MIN_INTERVAL && ABS(tenSecAvg) > 0.2 && tenSecAvg < 3 && scaleWeight < 3) {
         // tare if: not tared recently, more than 0.2 away from 0, less than 3 grams total (also works for negative weight)
@@ -92,7 +92,7 @@ void scaleStatusLoop(void *p) {
         // using average over last 500ms as empty cup weight
         Serial.println("Starting grinding");
         cupWeightEmpty = weightHistory.averageSince((int64_t)millis() - 500);
-        Menu<void*>::setGrinderState(STATUS_GRINDING_IN_PROGRESS);
+        DeviceState::setGrinderState(STATUS_GRINDING_IN_PROGRESS);
         
         if(!scaleMode){
           newOffset = true;
@@ -106,7 +106,7 @@ void scaleStatusLoop(void *p) {
       if (!scaleReady) {
         
         grinderToggle();
-        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        DeviceState::setGrinderState(STATUS_GRINDING_FAILED);
       }
       //Serial.printf("Scale mode: %d\n", scaleMode);
       //Serial.printf("Started grinding at: %d\n", startedGrindingAt);
@@ -122,7 +122,7 @@ void scaleStatusLoop(void *p) {
         Serial.println("Failed because grinding took too long");
         
         grinderToggle();
-        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        DeviceState::setGrinderState(STATUS_GRINDING_FAILED);
         continue;
       }
 
@@ -134,7 +134,7 @@ void scaleStatusLoop(void *p) {
         Serial.println("Failed because no change in weight was detected");
         
         grinderToggle();
-        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        DeviceState::setGrinderState(STATUS_GRINDING_FAILED);
         continue;
       }
 
@@ -142,7 +142,7 @@ void scaleStatusLoop(void *p) {
         Serial.printf("Failed because weight too low, min: %f, min value: %f\n", weightHistory.minSince((int64_t)millis() - 200), CUP_WEIGHT + CUP_DETECTION_TOLERANCE);
         
         grinderToggle();
-        Menu<void*>::setGrinderState(STATUS_GRINDING_FAILED);
+        DeviceState::setGrinderState(STATUS_GRINDING_FAILED);
         continue;
       }
       double currentOffset = offset;
@@ -154,7 +154,7 @@ void scaleStatusLoop(void *p) {
         finishedGrindingAt = millis();
         
         grinderToggle();
-        Menu<void*>::setGrinderState(STATUS_GRINDING_FINISHED);
+        DeviceState::setGrinderState(STATUS_GRINDING_FINISHED);
         continue;
       }
     } else if (grinderState == STATUS_GRINDING_FINISHED) {
@@ -162,7 +162,7 @@ void scaleStatusLoop(void *p) {
       if (scaleWeight < 5) {
         Serial.println("Going back to empty");
         startedGrindingAt = 0;
-        Menu<void*>::setGrinderState(STATUS_EMPTY);
+        DeviceState::setGrinderState(STATUS_EMPTY);
         continue;
       }
       else if (currentWeight != setWeight + cupWeightEmpty && millis() - finishedGrindingAt > 1500 && newOffset)
@@ -179,7 +179,7 @@ void scaleStatusLoop(void *p) {
     } else if (grinderState == STATUS_GRINDING_FAILED) {
       if (scaleWeight >= GRINDING_FAILED_WEIGHT_TO_RESET) {
         Serial.println("Going back to empty");
-        Menu<void*>::setGrinderState(STATUS_EMPTY);
+        DeviceState::setGrinderState(STATUS_EMPTY);
         continue;
       }
     }

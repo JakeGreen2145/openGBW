@@ -6,7 +6,7 @@ std::vector<int> mainMenuOptions = {
 };
 
 // TODO: find a better solution for this that stays in sync with the options above
-std::vector<char*> mainMenuNames = {
+std::vector<const char*> mainMenuNames = {
     "Exit", "Calibrate Scale", "Set Cup Weight", "Set Offset", "Set Scale Mode", "Set Grind Mode", "Set Sleep Timeout", "Reset Settings"
 };
 
@@ -18,8 +18,9 @@ MainMenu::MainMenu(){
     this -> menuId = MAIN_MENU;
 };
 
+MainMenu MainMenu::instance = MainMenu();
+
 MainMenu& MainMenu::getMainMenu() {
-    instance = MainMenu();
     return instance;
 }
 
@@ -63,14 +64,6 @@ void MainMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     
 }
 
-void MainMenu::incrementValue(MenuId increment) {
-    // prevent array out of bounds
-    menuIndex = (menuIndex + increment) % menuItemsCount;
-    // loop menu
-    menuIndex = menuIndex < 0 ? menuItemsCount + menuIndex : menuIndex;
-    value = static_cast<MenuId>(mainMenuOptions.at(menuIndex));
-}
-
 // TODO: remove this or remove the increment function above
 void MainMenu::handleEncoderChange(int encoderDelta) {
     // prevent array out of bounds
@@ -82,44 +75,44 @@ void MainMenu::handleEncoderChange(int encoderDelta) {
 
 void MainMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
     if(value == EXIT){
-        activeMenu = NONE;
-        grinderState = STATUS_EMPTY;
+        DeviceState::setActiveMenu(NONE);
+        DeviceState::setGrinderState(STATUS_EMPTY);
         rotaryEncoder.setAcceleration(100);
         Serial.println("Exited Menu");
     }
     else if (value == OFFSET){
-        activeMenu = OFFSET;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(OFFSET);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Offset Menu");
     }
     else if (value == CUP_WEIGHT_MENU)
     {
-        activeMenu = CUP_WEIGHT_MENU;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(CUP_WEIGHT_MENU);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Cup Menu");
     }
     else if (value == CALIBRATE)
     {
-        activeMenu = CALIBRATE;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(CALIBRATE);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Calibration Menu");
     }
     else if (value == SCALE_MODE)
     {
-        activeMenu = SCALE_MODE;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(SCALE_MODE);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Scale Mode Menu");
     }
     else if (value == GRINDING_MODE)
     {
-        activeMenu = GRINDING_MODE;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(GRINDING_MODE);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Grind Mode Menu");
     }
     else if (value == RESET)
     {
-        activeMenu = RESET;
-        grinderState = STATUS_IN_SUBMENU;
+        DeviceState::setActiveMenu(RESET);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         //greset = false;
         Serial.println("Reset Menu");
     }

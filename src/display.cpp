@@ -208,7 +208,7 @@ void updateDisplay( void * parameter) {
       continue;
     }
 
-    GrinderState grinderState = Menu<void*>::getGrinderState();
+    GrinderState grinderState = DeviceState::getGrinderState();
 
     if (scaleLastUpdatedAt == 0) {
       u8g2.setFontPosTop();

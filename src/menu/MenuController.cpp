@@ -154,7 +154,7 @@ void rotary_onChange() {
 
 void rotary_loop(void *p) {
     for(;;) {
-        grinderState = Menu<void*>::getGrinderState();
+        grinderState = DeviceState::getGrinderState();
         if (rotaryEncoder.encoderChanged()) {
             rotary_onChange();
         }
