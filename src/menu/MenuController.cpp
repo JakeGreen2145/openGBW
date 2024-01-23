@@ -3,8 +3,9 @@
 TaskHandle_t MenuTask;
 static AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
 MainMenu& mainMenu = MainMenu::getMainMenu(); // controls selected setting
-ClosedMenu& closedMenu = ClosedMenu::getClosedMenu(); // controls setWeight
-OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // controls grind weight offset
+ClosedMenu& closedMenu = ClosedMenu::getClosedMenu(); // Controls setWeight
+OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // Controls grind weight offset
+CalibrateMenu& calibrateMenu = CalibrateMenu::getCalibrateMenu(); // Controls load cell calibration
 static Preferences controllerPreferences;
 //double setCupWeight;
 GrinderState grinderState = STATUS_EMPTY;
@@ -62,18 +63,10 @@ void rotary_onButtonClick() {
         //     currentSetting = -1;
         //     }
         // }
-        // else if (currentSetting == 1)
-        // {
-        //     controllerPreferences.begin("scale", false);
-        //     double newCalibrationValue = controllerPreferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
-        //     Serial.print("New scale factor set to: ");
-        //     Serial.println(newCalibrationValue);
-        //     controllerPreferences.putDouble("calibration", newCalibrationValue);
-        //     controllerPreferences.end();
-        //     isNewScaleCalibrationSet = true;
-        //     grinderState = STATUS_IN_MENU;
-        //     currentSetting = -1;
-        // }
+        else if (activeSubmenu == CALIBRATE)
+        {
+            calibrateMenu.handleEncoderClick(rotaryEncoder);
+        }
         // else if (currentSetting == 3)
         // {
         //     controllerPreferences.begin("scale", false);
@@ -174,23 +167,7 @@ void setupMenu() {
     * Using acceleration, faster you turn, faster will the value raise.
     * For fine tuning slow down.
     */
-    // rotaryEncoder.disableAcceleration(); //acceleration is now enabled by default - disable if you dont need it
     rotaryEncoder.setAcceleration(100); // or set the value - larger number = more accelearation; 0 or 1 means disabled acceleration
-
-    // 3) setup controllerPreferences
-    controllerPreferences.begin("scale", false);
-  
-    // TODO: initialize menu objects with these values
-    double scaleFactor = controllerPreferences.getDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-    double setWeight = controllerPreferences.getDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
-    closedMenu.setValue(setWeight);
-    // offset = controllerPreferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
-    // setCupWeight = controllerPreferences.getDouble("cup", (double)CUP_WEIGHT);
-    // scaleMode = controllerPreferences.getBool("scaleMode", false);
-    // grindMode = controllerPreferences.getBool("grindMode", false);
-
-    controllerPreferences.end();
-
 
     // 4) start loop to catch I/O
     xTaskCreatePinnedToCore(

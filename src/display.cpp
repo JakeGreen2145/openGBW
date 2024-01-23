@@ -49,7 +49,6 @@ void RightPrintToScreen(char const *str, u8g2_uint_t y)
 }
 
 void showMenu() {
-    MainMenu mainMenu = MainMenu::getMainMenu();
     const char* prevName = mainMenu.getPrevMenuName();
     const char* selectedName = mainMenu.getSelectedMenuName();
     const char* nextName = mainMenu.getNextMenuName();
@@ -73,7 +72,7 @@ void showOffsetMenu(){
   u8g2.setFont(u8g2_font_7x14B_tf);
   CenterPrintToScreen("Adjust offset", 0);
   u8g2.setFont(u8g2_font_7x13_tr);
-  snprintf(buf, sizeof(buf), "%3.2fg", offset);
+  snprintf(buf, sizeof(buf), "%3.2fg", offsetMenu.getValue());
   CenterPrintToScreen(buf, 28);
   u8g2.sendBuffer();
 }
@@ -168,28 +167,30 @@ void showResetMenu()
   u8g2.sendBuffer();
 }
 
+// Show the active setting submenu
 void showSetting(){
-  MenuId currentSetting = MainMenu::getMainMenu().getValue();
+  
+  MenuId activeMenu = DeviceState::getActiveMenu();
 
-  if(currentSetting == OFFSET){
+  if(activeMenu == OFFSET){
     showOffsetMenu();
   }
-  else if(currentSetting == CUP_WEIGHT_MENU){
+  else if(activeMenu == CUP_WEIGHT_MENU){
     showCupMenu();
   }
-  else if (currentSetting == CALIBRATE)
+  else if (activeMenu == CALIBRATE)
   {
     showCalibrationMenu();
   }
-  else if (currentSetting == SCALE_MODE)
+  else if (activeMenu == SCALE_MODE)
   {
     showScaleModeMenu();
   }
-  else if (currentSetting == GRINDING_MODE)
+  else if (activeMenu == GRINDING_MODE)
   {
     showGrindModeMenu();
   }
-  else if (currentSetting == RESET)
+  else if (activeMenu == RESET)
   {
     showResetMenu();
   }
@@ -261,7 +262,7 @@ void updateDisplay( void * parameter) {
           buf2,
           sizeof(buf2),
           "Set: %3.1fg",
-          ClosedMenu::getClosedMenu().getValue()
+          closedMenu.getValue()
         );
         LeftPrintToScreen(buf2, 50);
 

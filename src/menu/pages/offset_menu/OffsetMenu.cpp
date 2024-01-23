@@ -2,9 +2,12 @@
 
 
 OffsetMenu::OffsetMenu(){
-    this -> value = NONE;
-    this -> name = "Closed Menu";
-    this -> menuId = MAIN_MENU;
+    menuPreferences.begin("scale", false);
+    double initialValue = menuPreferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
+    menuPreferences.end();
+    this -> value = initialValue;
+    this -> name = "Offset Menu";
+    this -> menuId = OFFSET;
 };
 
 OffsetMenu OffsetMenu::instance = OffsetMenu();

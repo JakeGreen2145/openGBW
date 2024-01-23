@@ -195,6 +195,9 @@ void scaleStatusLoop(void *p) {
   }
 }
 
+
+// TODO: split out grinder and scale into their own classes that other classes can get status from.
+// Monitor all inputs in looping threads, handle all outputs in menus?
 void updateScale( void * parameter) {
   float lastEstimate;
 
@@ -240,13 +243,15 @@ void setupScale() {
 
   loadcell.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
+  //calibrateMenu.configureScale(loadcell, kalmanFilter);
+
   pinMode(GRINDER_ACTIVE_PIN, OUTPUT);
   digitalWrite(GRINDER_ACTIVE_PIN, 0);
 
   preferences.begin("scale", false);
   
-  double scaleFactor = preferences.getDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-  setWeight = preferences.getDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
+  double scaleFactor = calibrateMenu.getValue();
+  setWeight = closedMenu.getValue();
   offset = preferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
   setCupWeight = preferences.getDouble("cup", (double)CUP_WEIGHT);
   scaleMode = preferences.getBool("scaleMode", false);

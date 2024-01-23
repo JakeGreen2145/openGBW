@@ -8,4 +8,6 @@
 #include "./menu/pages/main_menu/MainMenu.hpp"
 #include "./menu/pages/Menu.hpp"
 
+extern unsigned long lastEncoderActionAt;
+
 void setupDisplay();

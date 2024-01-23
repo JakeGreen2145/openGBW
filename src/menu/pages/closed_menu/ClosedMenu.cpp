@@ -1,10 +1,14 @@
 #include "ClosedMenu.hpp"
 
 
-ClosedMenu::ClosedMenu(){
-    this -> value = 18.0;
+// TODO: update all constructors to pull from preferences first
+ClosedMenu::ClosedMenu() {
+    menuPreferences.begin("scale", false);
+    double initialValue = menuPreferences.getDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
+    menuPreferences.end();
+    this -> value = initialValue;
     this -> name = "Closed Menu";
-    this -> menuId = MAIN_MENU;
+    this -> menuId = NONE;
 };
 
 ClosedMenu ClosedMenu::instance = ClosedMenu();
