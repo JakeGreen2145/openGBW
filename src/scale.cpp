@@ -16,9 +16,9 @@ double setWeight = 0; // desired amount of coffee
 double setCupWeight = 0; // cup weight set by user
 double offset = 0; // stop x grams prior to set weight
 double scaleFactor = 1.0; // load cell multiplier to make 100g read as 100g.
+bool grindMode = false;  // false for impulse to start/stop grinding, true for continuous on while grinding
 // TODO: enable these to be updated in the loop via menu classes
 bool scaleMode = false; // use as regular scale with timer if true
-bool grindMode = false;  // false for impulse to start/stop grinding, true for continuous on while grinding
 
 double scaleWeight = 0; //current weight
 bool grinderActive = false; //needed for continuous mode
@@ -66,6 +66,7 @@ void scaleStatusLoop(void *p) {
     setWeight = closedMenu.getValue();
     offset = offsetMenu.getValue();
     setCupWeight = cupMenu.getValue();
+    grindMode = grindModeMenu.getValue();
     
 
     tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
@@ -244,7 +245,7 @@ void setupScale() {
   offset = offsetMenu.getValue();
   setCupWeight = cupMenu.getValue();
   scaleMode = preferences.getBool("scaleMode", false);
-  grindMode = preferences.getBool("grindMode", false);
+  grindMode = grindModeMenu.getValue();
 
   preferences.end();
   

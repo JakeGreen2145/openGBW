@@ -8,6 +8,7 @@ ClosedMenu& closedMenu = ClosedMenu::getClosedMenu(); // Controls setWeight
 OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // Controls grind weight offset
 CalibrateMenu& calibrateMenu = CalibrateMenu::getCalibrateMenu(); // Controls load cell calibration
 CupMenu& cupMenu = CupMenu::getCupMenu(); // Controls cup weight setting
+GrindModeMenu& grindModeMenu = GrindModeMenu::getGrindModeMenu(); // Controls grind mode
 //double setCupWeight;
 GrinderState grinderState = STATUS_EMPTY;
 unsigned long lastEncoderActionAt = 0;
@@ -67,14 +68,10 @@ void rotary_onButtonClick() {
         //     grinderState = STATUS_IN_MENU;
         //     currentSetting = -1;
         // }
-        // else if (currentSetting == 4)
-        // {
-        //     controllerPreferences.begin("scale", false);
-        //     controllerPreferences.putBool("grindMode", grindMode);
-        //     controllerPreferences.end();
-        //     grinderState = STATUS_IN_MENU;
-        //     currentSetting = -1;
-        // }
+        else if (activeSubmenu == GRINDING_MODE)
+        {
+            grindModeMenu.handleEncoderClick(rotaryEncoder);
+        }
         // else if (currentSetting == 6)
         // {
         //     if(greset){
@@ -121,9 +118,9 @@ void rotary_onChange() {
         // else if(currentSetting == 3) {
         //     scaleMode = !scaleMode;
         // }
-        // else if (currentSetting == 4) {
-        //     grindMode = !grindMode;
-        // }
+        else if (activeSubmenu == GRINDING_MODE) {
+            grindModeMenu.handleEncoderChange(encoderDelta);
+        }
         // else if (currentSetting == 6) {
         //     greset = !greset;
         // }
