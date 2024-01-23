@@ -1,8 +1,6 @@
 #include "ClosedMenu.hpp"
 
 
-Preferences controllerPreferences;
-
 ClosedMenu::ClosedMenu(){
     this -> value = 18.0;
     this -> name = "Closed Menu";
@@ -28,9 +26,9 @@ void ClosedMenu::handleEncoderChange(int encoderDelta) {
     Serial.print("Value: ");
     value += ((float)encoderDelta) / 10;
     Serial.println(value);
-    controllerPreferences.begin("scale", false);
-    controllerPreferences.putDouble("setWeight", value);
-    controllerPreferences.end();
+    menuPreferences.begin("scale", false);
+    menuPreferences.putDouble("setWeight", value);
+    menuPreferences.end();
 }
 
 void ClosedMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {

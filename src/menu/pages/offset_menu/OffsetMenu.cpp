@@ -1,8 +1,6 @@
 #include "OffsetMenu.hpp"
 
 
-Preferences controllerPreferences;
-
 OffsetMenu::OffsetMenu(){
     this -> value = NONE;
     this -> name = "Closed Menu";
@@ -27,15 +25,15 @@ void OffsetMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
 void OffsetMenu::handleEncoderChange(int encoderDelta) {
     Serial.print("Value: ");
     value += ((float)encoderDelta) / 100;
-    if(abs(value) >= setWeight) {
-        offset = setWeight;     //prevent nonsensical offsets
+    if(abs(value) >= 18.0) {
+        value = 18.0;     //prevent nonsensical offsets
     }
 }
 
 void OffsetMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
-    controllerPreferences.begin("scale", false);
-    controllerPreferences.putDouble("offset", getValue());
-    controllerPreferences.end();
+    menuPreferences.begin("scale", false);
+    menuPreferences.putDouble("offset", getValue());
+    menuPreferences.end();
     DeviceState::setGrinderState(STATUS_IN_MENU);
     DeviceState::setActiveMenu(MAIN_MENU);
 }

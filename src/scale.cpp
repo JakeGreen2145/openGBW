@@ -74,8 +74,7 @@ void scaleStatusLoop(void *p) {
     // Update setWeight
     setWeight = ClosedMenu::getClosedMenu().getValue();
     // Update offset
-    // TODO: add an offsetMenu instance since it's used frequently
-    offset = OffsetMenu::getOffsetMenu().getValue();
+    offset = offsetMenu.getValue();
     
 
     tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
@@ -179,7 +178,7 @@ void scaleStatusLoop(void *p) {
         if(ABS(offset) >= setWeight){
           offset = COFFEE_DOSE_OFFSET;
         }
-        OffsetMenu::getOffsetMenu().setValue(offset);
+        offsetMenu.setValue(offset);
         preferences.begin("scale", false);
         preferences.putDouble("offset", offset);
         preferences.end();
