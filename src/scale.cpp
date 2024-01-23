@@ -12,21 +12,17 @@ Preferences preferences;
 TaskHandle_t ScaleTask;
 TaskHandle_t ScaleStatusTask;
 
+double setWeight = 0; // desired amount of coffee
+double setCupWeight = 0; // cup weight set by user
+double offset = 0; // stop x grams prior to set weight
+double scaleFactor = 1.0; // load cell multiplier to make 100g read as 100g.
+// TODO: enable these to be updated in the loop via menu classes
+bool scaleMode = false; // use as regular scale with timer if true
+bool grindMode = false;  // false for impulse to start/stop grinding, true for continuous on while grinding
+
 double scaleWeight = 0; //current weight
-double setWeight = 0; //desired amount of coffee
-double setCupWeight = 0; //cup weight set by user
-double offset = 0; //stop x grams prior to set weight
-bool scaleMode = false; //use as regular scale with timer if true
-bool grindMode = false;  //false for impulse to start/stop grinding, true for continuous on while grinding
 bool grinderActive = false; //needed for continuous mode
 MathBuffer<double, 100> weightHistory;
-
-// TODO: get these from menu classes
-    // offset = preferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
-    // setCupWeight = preferences.getDouble("cup", (double)CUP_WEIGHT);
-    // scaleMode = preferences.getBool("scaleMode", false);
-    // grindMode = preferences.getBool("grindMode", false);
-
 unsigned long scaleLastUpdatedAt = 0;
 unsigned long lastSignificantWeightChangeAt = 0;
 unsigned long lastTareAt = 0; // if 0, should tare load cell, else represent when it was last tared
@@ -62,19 +58,14 @@ void scaleStatusLoop(void *p) {
   double tenSecAvg;
   for (;;) {
     // recalibrate scale if new calibration has been set
-    // TODO: control this from the calibrate menu
-    bool isNewScaleCalibrationSet = false;
-    if (isNewScaleCalibrationSet) {
-        preferences.begin("scale", false);
-        double newCalibrationValue = preferences.getDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-        preferences.end();
-        loadcell.set_scale(newCalibrationValue);
+    if (calibrateMenu.getValue() != scaleFactor) {
+        loadcell.set_scale(calibrateMenu.getValue());
+        scaleFactor = calibrateMenu.getValue();
     }
-
-    // Update setWeight
-    setWeight = ClosedMenu::getClosedMenu().getValue();
-    // Update offset
+    // Update settings
+    setWeight = closedMenu.getValue();
     offset = offsetMenu.getValue();
+    setCupWeight = cupMenu.getValue();
     
 
     tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
@@ -243,17 +234,15 @@ void setupScale() {
 
   loadcell.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
-  //calibrateMenu.configureScale(loadcell, kalmanFilter);
-
   pinMode(GRINDER_ACTIVE_PIN, OUTPUT);
   digitalWrite(GRINDER_ACTIVE_PIN, 0);
 
   preferences.begin("scale", false);
   
-  double scaleFactor = calibrateMenu.getValue();
+  scaleFactor = calibrateMenu.getValue();
   setWeight = closedMenu.getValue();
-  offset = preferences.getDouble("offset", (double)COFFEE_DOSE_OFFSET);
-  setCupWeight = preferences.getDouble("cup", (double)CUP_WEIGHT);
+  offset = offsetMenu.getValue();
+  setCupWeight = cupMenu.getValue();
   scaleMode = preferences.getBool("scaleMode", false);
   grindMode = preferences.getBool("grindMode", false);
 

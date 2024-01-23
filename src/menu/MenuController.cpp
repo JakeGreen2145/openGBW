@@ -2,11 +2,12 @@
 
 TaskHandle_t MenuTask;
 static AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
-MainMenu& mainMenu = MainMenu::getMainMenu(); // controls selected setting
+static Preferences controllerPreferences;
+MainMenu& mainMenu = MainMenu::getMainMenu(); // Controls selected setting
 ClosedMenu& closedMenu = ClosedMenu::getClosedMenu(); // Controls setWeight
 OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // Controls grind weight offset
 CalibrateMenu& calibrateMenu = CalibrateMenu::getCalibrateMenu(); // Controls load cell calibration
-static Preferences controllerPreferences;
+CupMenu& cupMenu = CupMenu::getCupMenu(); // Controls cup weight setting
 //double setCupWeight;
 GrinderState grinderState = STATUS_EMPTY;
 unsigned long lastEncoderActionAt = 0;
@@ -50,19 +51,10 @@ void rotary_onButtonClick() {
         if(activeSubmenu == OFFSET) {
             offsetMenu.handleEncoderClick(rotaryEncoder);
         }
-        // else if (currentSetting == 0)
-        // {
-        //     if(scaleWeight > 30) {       //prevent accidental setting with no cup
-        //     setCupWeight = scaleWeight;
-        //     Serial.println(setCupWeight);
-            
-        //     controllerPreferences.begin("scale", false);
-        //     controllerPreferences.putDouble("cup", setCupWeight);
-        //     controllerPreferences.end();
-        //     grinderState = STATUS_IN_MENU;
-        //     currentSetting = -1;
-        //     }
-        // }
+        else if (activeSubmenu == CUP_WEIGHT_MENU)
+        {
+            cupMenu.handleEncoderClick(rotaryEncoder);
+        }
         else if (activeSubmenu == CALIBRATE)
         {
             calibrateMenu.handleEncoderClick(rotaryEncoder);
