@@ -106,9 +106,6 @@ void scaleStatusLoop(void *p) {
         grinderToggle();
         DeviceState::setGrinderState(STATUS_GRINDING_FAILED);
       }
-      //Serial.printf("Scale mode: %d\n", scaleMode);
-      //Serial.printf("Started grinding at: %d\n", startedGrindingAt);
-      //Serial.printf("Weight: %f\n", cupWeightEmpty - scaleWeight);
       if (scaleMode && startedGrindingAt == 0 && scaleWeight - cupWeightEmpty >= 0.1)
       {
         Serial.printf("Started grinding at: %d\n", millis());
@@ -216,22 +213,6 @@ void updateScale( void * parameter) {
 
 
 void setupScale() {
-  // rotaryEncoder.begin();
-  // rotaryEncoder.setup(readEncoderISR);
-  // // set boundaries and if values should cycle or not
-  // // in this example we will set possible values between 0 and 1000;
-  // bool circleValues = true;
-  // rotaryEncoder.setBoundaries(-10000, 10000, circleValues); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
-
-  // /*Rotary acceleration introduced 25.2.2021.
-  //  * in case range to select is huge, for example - select a value between 0 and 1000 and we want 785
-  //  * without accelerateion you need long time to get to that number
-  //  * Using acceleration, faster you turn, faster will the value raise.
-  //  * For fine tuning slow down.
-  //  */
-  // // rotaryEncoder.disableAcceleration(); //acceleration is now enabled by default - disable if you dont need it
-  // rotaryEncoder.setAcceleration(100); // or set the value - larger number = more accelearation; 0 or 1 means disabled acceleration
-
 
   loadcell.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
