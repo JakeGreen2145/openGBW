@@ -9,6 +9,7 @@ OffsetMenu& offsetMenu = OffsetMenu::getOffsetMenu(); // Controls grind weight o
 CalibrateMenu& calibrateMenu = CalibrateMenu::getCalibrateMenu(); // Controls load cell calibration
 CupMenu& cupMenu = CupMenu::getCupMenu(); // Controls cup weight setting
 GrindModeMenu& grindModeMenu = GrindModeMenu::getGrindModeMenu(); // Controls grind mode
+ResetMenu& resetMenu = ResetMenu::getResetMenu(); // Resets to default settings
 //double setCupWeight;
 GrinderState grinderState = STATUS_EMPTY;
 unsigned long lastEncoderActionAt = 0;
@@ -72,27 +73,21 @@ void rotary_onButtonClick() {
         {
             grindModeMenu.handleEncoderClick(rotaryEncoder);
         }
-        // else if (currentSetting == 6)
-        // {
-        //     if(greset){
-        //         controllerPreferences.begin("scale", false);
-        //         controllerPreferences.putDouble("calibration", (double)LOADCELL_SCALE_FACTOR);
-        //         setWeight = (double)COFFEE_DOSE_WEIGHT;
-        //         controllerPreferences.putDouble("setWeight", (double)COFFEE_DOSE_WEIGHT);
-        //         offset = (double)COFFEE_DOSE_OFFSET;
-        //         controllerPreferences.putDouble("offset", (double)COFFEE_DOSE_OFFSET);
-        //         setCupWeight = (double)CUP_WEIGHT;
-        //         controllerPreferences.putDouble("cup", (double)CUP_WEIGHT);
-        //         scaleMode = false;
-        //         controllerPreferences.putBool("scaleMode", false);
-        //         grindMode = false;
-        //         controllerPreferences.putBool("grindMode", false);
-        //         isNewScaleCalibrationSet = true;
-        //         controllerPreferences.end();
-        //     }
-        //     grinderState = STATUS_IN_MENU;
-        //     currentSetting = -1;
-        // }
+        else if (activeSubmenu == RESET)
+        {
+            // handle this here since resetMenu doesn't have access to all other menus
+            if (resetMenu.getValue()) {
+                closedMenu.setValue((double)COFFEE_DOSE_WEIGHT);
+                offsetMenu.setValue((double)COFFEE_DOSE_OFFSET);
+                cupMenu.setValue((double)CUP_WEIGHT);
+                //scaleModeMenu.setValue(false);
+                grindModeMenu.setValue(false);
+                calibrateMenu.setValue((double)LOADCELL_SCALE_FACTOR);
+            }
+            resetMenu.setValue(false);
+            DeviceState::setGrinderState(STATUS_IN_MENU);
+            DeviceState::setActiveMenu(MAIN_MENU);
+        }
     }
 }
 
@@ -121,9 +116,9 @@ void rotary_onChange() {
         else if (activeSubmenu == GRINDING_MODE) {
             grindModeMenu.handleEncoderChange(encoderDelta);
         }
-        // else if (currentSetting == 6) {
-        //     greset = !greset;
-        // }
+        else if (activeSubmenu == RESET) {
+            resetMenu.handleEncoderChange(encoderDelta);
+        }
     }
 }
 

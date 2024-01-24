@@ -20,4 +20,6 @@ class ClosedMenu : public Menu<double> {
         void handleEncoderChange(int encoderDelta) override;
 
         void handleEncoderClick(AiEsp32RotaryEncoder encoder) override;
+
+        void setValue(double newValue);
 };

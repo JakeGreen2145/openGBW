@@ -25,18 +25,22 @@ void ClosedMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     // TODO: move away from these
 }
 
-// TODO: remove this or remove the increment function above
-void ClosedMenu::handleEncoderChange(int encoderDelta) {
-    Serial.print("Value: ");
-    value += ((float)encoderDelta) / 10;
-    Serial.println(value);
+void ClosedMenu::setValue(double newValue) {
+    this->value = newValue;
     menuPreferences.begin("scale", false);
-    menuPreferences.putDouble("setWeight", value);
+    menuPreferences.putDouble("setWeight", newValue);
+    Serial.print("New set weight set to: ");
+    Serial.println(newValue);
     menuPreferences.end();
 }
 
+void ClosedMenu::handleEncoderChange(int encoderDelta) {
+    double newValue = value + ((float)encoderDelta) / 10;
+    setValue(newValue);
+}
+
 void ClosedMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
-    DeviceState::setGrinderState(STATUS_IN_MENU);
     rotaryEncoder.setAcceleration(0);
+    DeviceState::setGrinderState(STATUS_IN_MENU);
     DeviceState::setActiveMenu(MAIN_MENU);
 }

@@ -23,12 +23,10 @@ void CupMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     // TODO: move away from these
 }
 
-// TODO: remove this or remove the increment function above
 void CupMenu::handleEncoderChange(int encoderDelta) {
     // no op
 }
 
-// TODO: Overload setValue for all menus that need to store a preference.
 void CupMenu::setValue(double newValue) {
     this->value = newValue;
     menuPreferences.begin("scale", false);

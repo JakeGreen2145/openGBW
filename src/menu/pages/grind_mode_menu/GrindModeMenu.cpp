@@ -29,7 +29,6 @@ void GrindModeMenu::handleEncoderChange(int encoderDelta) {
     value = !value;
 }
 
-// TODO: Overload setValue for all menus that need to store a preference.
 void GrindModeMenu::setValue(bool newValue) {
     this->value = newValue;
     menuPreferences.begin("scale", false);

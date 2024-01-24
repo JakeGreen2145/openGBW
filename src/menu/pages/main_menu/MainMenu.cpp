@@ -64,7 +64,6 @@ void MainMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     
 }
 
-// TODO: remove this or remove the increment function above
 void MainMenu::handleEncoderChange(int encoderDelta) {
     // prevent array out of bounds
     menuIndex = (menuIndex + encoderDelta) % menuItemsCount;
@@ -113,7 +112,6 @@ void MainMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
     {
         DeviceState::setActiveMenu(RESET);
         DeviceState::setGrinderState(STATUS_IN_SUBMENU);
-        //greset = false;
         Serial.println("Reset Menu");
     }
 }

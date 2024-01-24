@@ -147,7 +147,7 @@ void showCalibrationMenu(){
 
 void showResetMenu()
 {
-  bool greset = false;
+  bool greset = resetMenu.getValue();
   char buf[16];
   u8g2.clearBuffer();
   u8g2.setFontPosTop();

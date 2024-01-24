@@ -28,7 +28,5 @@ class CalibrateMenu : public Menu<double> {
 
         void handleEncoderClick(AiEsp32RotaryEncoder encoder) override;
 
-        // void configureScale(HX711& loadcell, SimpleKalmanFilter& kalmanFilter);
-
         void setValue(double newValue);
 };

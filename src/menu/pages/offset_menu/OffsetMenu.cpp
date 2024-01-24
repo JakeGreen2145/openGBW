@@ -24,19 +24,24 @@ void OffsetMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     // TODO: move away from these
 }
 
+void OffsetMenu::setValue(double newValue) {
+    menuPreferences.begin("scale", false);
+    menuPreferences.putDouble("offset", newValue);
+    menuPreferences.end();
+    Serial.print("GrindMode set to: ");
+    Serial.println(newValue);
+}
+
 // TODO: remove this or remove the increment function above
 void OffsetMenu::handleEncoderChange(int encoderDelta) {
-    Serial.print("Value: ");
-    value += ((float)encoderDelta) / 100;
-    if(abs(value) >= 18.0) {
-        value = 18.0;     //prevent nonsensical offsets
+    double newValue = value + ((float)encoderDelta) / 100;
+    if(abs(newValue) >= 18.0) {
+        newValue = 18.0; // Prevent nonsensical offsets
     }
+    setValue(newValue);
 }
 
 void OffsetMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
-    menuPreferences.begin("scale", false);
-    menuPreferences.putDouble("offset", getValue());
-    menuPreferences.end();
     DeviceState::setGrinderState(STATUS_IN_MENU);
     DeviceState::setActiveMenu(MAIN_MENU);
 }
