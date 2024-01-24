@@ -24,12 +24,10 @@ void CalibrateMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
     // TODO: move away from these
 }
 
-// TODO: remove this or remove the increment function above
 void CalibrateMenu::handleEncoderChange(int encoderDelta) {
     // no op
 }
 
-// TODO: Overload setValue for all menus that need to store a preference.
 void CalibrateMenu::setValue(double newValue) {
     this->value = newValue;
     menuPreferences.begin("scale", false);
@@ -41,15 +39,10 @@ void CalibrateMenu::setValue(double newValue) {
 
 void CalibrateMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
     double scaleWeight = kalmanFilter.updateEstimate(loadcell.get_units(5));
-    double newCalibrationValue = menuPreferences.getDouble("calibration", (double)newCalibrationValue) * (scaleWeight / 100);
+    double newCalibrationValue = value * (scaleWeight / 100);
 
     setValue(newCalibrationValue);
     DeviceState::setGrinderState(STATUS_IN_MENU);
     DeviceState::setActiveMenu(MAIN_MENU);
 
 }
-
-// void CalibrateMenu::configureScale(HX711& loadcell, SimpleKalmanFilter& kalmanFilter) {
-//     this->loadcell = loadcell;
-//     this->kalmanFilter = kalmanFilter;
-// }

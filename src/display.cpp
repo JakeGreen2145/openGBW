@@ -15,8 +15,6 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
 
 TaskHandle_t DisplayTask;
 
-#define SLEEP_AFTER_MS 60 * 1000 // sleep after 10 seconds
-
 void CenterPrintToScreen(char const *str, u8g2_uint_t y) {
   u8g2_uint_t width = u8g2.getStrWidth(str);
   u8g2.setCursor(128 / 2 - width / 2, y);
@@ -77,6 +75,19 @@ void showOffsetMenu(){
   u8g2.sendBuffer();
 }
 
+void showSleepMenu() {
+  char buf[16];
+  u8g2.clearBuffer();
+  u8g2.setFontPosTop();
+  u8g2.setFont(u8g2_font_7x14B_tf);
+  CenterPrintToScreen("Screen timeout", 0);
+  u8g2.setFont(u8g2_font_7x13_tr);
+  int timeoutSeconds = ((int)sleepMenu.getValue())/1000;
+  snprintf(buf, sizeof(buf), "%d seconds", timeoutSeconds);
+  CenterPrintToScreen(buf, 28);
+  u8g2.sendBuffer();
+}
+
 void showScaleModeMenu()
 {
   char buf[16];
@@ -85,7 +96,7 @@ void showScaleModeMenu()
   u8g2.setFont(u8g2_font_7x14B_tf);
   CenterPrintToScreen("Set Scale Mode", 0);
   u8g2.setFont(u8g2_font_7x13_tr);
-  if(scaleMode){
+  if(scaleModeMenu.getValue()){
     LeftPrintToScreen("GBW", 19);
     LeftPrintActiveToScreen("Scale only", 35);
   }
@@ -172,27 +183,26 @@ void showSetting(){
   
   MenuId activeMenu = DeviceState::getActiveMenu();
 
-  if(activeMenu == OFFSET){
+  if(activeMenu == OFFSET) {
     showOffsetMenu();
   }
-  else if(activeMenu == CUP_WEIGHT_MENU){
+  else if(activeMenu == CUP_WEIGHT_MENU) {
     showCupMenu();
   }
-  else if (activeMenu == CALIBRATE)
-  {
+  else if (activeMenu == CALIBRATE) {
     showCalibrationMenu();
   }
-  else if (activeMenu == SCALE_MODE)
-  {
+  else if (activeMenu == SCALE_MODE) {
     showScaleModeMenu();
   }
-  else if (activeMenu == GRINDING_MODE)
-  {
+  else if (activeMenu == GRINDING_MODE) {
     showGrindModeMenu();
   }
-  else if (activeMenu == RESET)
-  {
+  else if (activeMenu == RESET) {
     showResetMenu();
+  }
+  else if (activeMenu == SLEEP) {
+    showSleepMenu();
   }
 }
 
@@ -203,7 +213,8 @@ void updateDisplay( void * parameter) {
   for(;;) {
     u8g2.clearBuffer();
     // Set screen to sleep if timeout is reached. Wake on scale change or encoder action.
-    if ((millis() - lastSignificantWeightChangeAt > SLEEP_AFTER_MS) && (millis() - lastEncoderActionAt > SLEEP_AFTER_MS)) {
+    long sleepTimeout = sleepMenu.getValue();
+    if ((millis() - lastSignificantWeightChangeAt > sleepTimeout) && (millis() - lastEncoderActionAt > sleepTimeout)) {
       u8g2.sendBuffer();
       delay(100);
       continue;

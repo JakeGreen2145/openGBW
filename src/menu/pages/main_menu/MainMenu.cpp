@@ -1,5 +1,5 @@
 #include "MainMenu.hpp"
-#include <vector>
+#include <vector> 
 
 std::vector<int> mainMenuOptions = {
     EXIT, CALIBRATE, CUP_WEIGHT_MENU, OFFSET, SCALE_MODE, GRINDING_MODE, SLEEP, RESET
@@ -113,5 +113,11 @@ void MainMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
         DeviceState::setActiveMenu(RESET);
         DeviceState::setGrinderState(STATUS_IN_SUBMENU);
         Serial.println("Reset Menu");
+    }
+    else if (value == SLEEP)
+    {
+        DeviceState::setActiveMenu(SLEEP);
+        DeviceState::setGrinderState(STATUS_IN_SUBMENU);
+        Serial.println("Sleep Timeout Menu");
     }
 }

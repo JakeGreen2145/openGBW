@@ -1,11 +1,8 @@
 #include "scale.hpp"
 #include <MathBuffer.h>
-#include <Preferences.h>
 
 HX711 loadcell;
 SimpleKalmanFilter kalmanFilter(0.02, 0.02, 0.01);
-
-Preferences preferences;
 
 #define ABS(a) (((a) > 0) ? (a) : ((a) * -1))
 
@@ -17,7 +14,6 @@ double setCupWeight = 0; // cup weight set by user
 double offset = 0; // stop x grams prior to set weight
 double scaleFactor = 1.0; // load cell multiplier to make 100g read as 100g.
 bool grindMode = false;  // false for impulse to start/stop grinding, true for continuous on while grinding
-// TODO: enable these to be updated in the loop via menu classes
 bool scaleMode = false; // use as regular scale with timer if true
 
 double scaleWeight = 0; //current weight
@@ -30,7 +26,6 @@ bool scaleReady = false;
 double cupWeightEmpty = 0; // measured actual cup weight
 unsigned long startedGrindingAt = 0;
 unsigned long finishedGrindingAt = 0;
-
 bool newOffset = false;
 
 void tareScale() {
@@ -58,15 +53,17 @@ void scaleStatusLoop(void *p) {
   double tenSecAvg;
   for (;;) {
     // recalibrate scale if new calibration has been set
-    if (calibrateMenu.getValue() != scaleFactor) {
-        loadcell.set_scale(calibrateMenu.getValue());
-        scaleFactor = calibrateMenu.getValue();
+    double newScaleFactor = calibrateMenu.getValue();
+    if (newScaleFactor != scaleFactor) {
+        loadcell.set_scale(newScaleFactor);
+        scaleFactor = newScaleFactor;
     }
     // Update settings
     setWeight = closedMenu.getValue();
     offset = offsetMenu.getValue();
     setCupWeight = cupMenu.getValue();
     grindMode = grindModeMenu.getValue();
+    scaleMode = scaleModeMenu.getValue();
     
 
     tenSecAvg = weightHistory.averageSince((int64_t)millis() - 10000);
@@ -160,6 +157,7 @@ void scaleStatusLoop(void *p) {
         DeviceState::setGrinderState(STATUS_EMPTY);
         continue;
       }
+      // Update grind weight offset if necessary
       else if (currentWeight != setWeight + cupWeightEmpty && millis() - finishedGrindingAt > 1500 && newOffset)
       {
         // TODO: move this to an offsetMenu function. Something like updateOffsetAfterGrind()
@@ -168,9 +166,6 @@ void scaleStatusLoop(void *p) {
           offset = COFFEE_DOSE_OFFSET;
         }
         offsetMenu.setValue(offset);
-        preferences.begin("scale", false);
-        preferences.putDouble("offset", offset);
-        preferences.end();
         newOffset = false;
       }
     } else if (grinderState == STATUS_GRINDING_FAILED) {
@@ -186,10 +181,9 @@ void scaleStatusLoop(void *p) {
 
 
 // TODO: split out grinder and scale into their own classes that other classes can get status from.
-// Monitor all inputs in looping threads, handle all outputs in menus?
+// Monitor all inputs in looping threads, handle all outputs in menus
 void updateScale( void * parameter) {
   float lastEstimate;
-
 
   for (;;) {
     if (lastTareAt == 0) {
@@ -218,17 +212,13 @@ void setupScale() {
 
   pinMode(GRINDER_ACTIVE_PIN, OUTPUT);
   digitalWrite(GRINDER_ACTIVE_PIN, 0);
-
-  preferences.begin("scale", false);
   
   scaleFactor = calibrateMenu.getValue();
   setWeight = closedMenu.getValue();
   offset = offsetMenu.getValue();
   setCupWeight = cupMenu.getValue();
-  scaleMode = preferences.getBool("scaleMode", false);
+  scaleMode = scaleModeMenu.getValue();
   grindMode = grindModeMenu.getValue();
-
-  preferences.end();
   
   loadcell.set_scale(scaleFactor);
 

@@ -41,7 +41,9 @@ void CupMenu::handleEncoderClick(AiEsp32RotaryEncoder rotaryEncoder) {
     double scaleWeight = kalmanFilter.updateEstimate(loadcell.get_units(5));
     if(scaleWeight > 30) {
         setValue(scaleWeight);
-        DeviceState::setActiveMenu(MAIN_MENU);
-        DeviceState::setGrinderState(STATUS_IN_MENU);
+    } else {
+        Serial.println("Cup weight was under 30. New cup weight not set.");
     }
+    DeviceState::setActiveMenu(MAIN_MENU);
+    DeviceState::setGrinderState(STATUS_IN_MENU);
 }

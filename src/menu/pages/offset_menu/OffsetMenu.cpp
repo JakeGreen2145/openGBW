@@ -25,10 +25,11 @@ void OffsetMenu::displayMenu(U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2) {
 }
 
 void OffsetMenu::setValue(double newValue) {
+    this->value = newValue;
     menuPreferences.begin("scale", false);
     menuPreferences.putDouble("offset", newValue);
     menuPreferences.end();
-    Serial.print("GrindMode set to: ");
+    Serial.print("Offset set to: ");
     Serial.println(newValue);
 }
 

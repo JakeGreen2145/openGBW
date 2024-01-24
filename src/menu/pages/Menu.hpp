@@ -21,6 +21,7 @@
 #define COFFEE_DOSE_OFFSET -2.5
 #define MAX_GRINDING_TIME 20000 // 20 seconds diff
 #define GRINDING_FAILED_WEIGHT_TO_RESET 150 // force on balance need to be measured to reset grinding
+#define SLEEP_AFTER_MS 60 * 1000 // sleep after 60 seconds by default
 
 #define GRINDER_ACTIVE_PIN 33
 
@@ -31,26 +32,6 @@
 #define ROTARY_ENCODER_BUTTON_PIN 34
 #define ROTARY_ENCODER_VCC_PIN -1
 #define ROTARY_ENCODER_STEPS 4
-
-
-
-// extern double scaleWeight;
-// extern unsigned long scaleLastUpdatedAt;
-// extern unsigned long lastSignificantWeightChangeAt;
-// extern unsigned long lastEncoderActionAt;
-// extern unsigned long lastTareAt;
-// extern bool scaleReady;
-// extern double cupWeightEmpty;
-// extern unsigned long startedGrindingAt;
-// extern unsigned long finishedGrindingAt;
-// extern double setWeight;
-// extern double offset;
-// extern bool scaleMode;
-// extern bool grindMode;
-// extern bool greset;
-// extern int menuItemsCount;
-// extern int currentMenuItem;
-// extern int currentSetting;
 
 class BaseMenu {
     // Define menu methods here that are independent of the value type.
@@ -74,10 +55,6 @@ class BaseMenu {
 
 template <typename T>
 class Menu : public BaseMenu {
-    private:
-        // Constructor is private. setupMenu should be used to initialize menus
-        // Menu(T initialValue, std::string name, MenuId menuId);
-        // static Menu<T> instance;
     protected:
         T value;
     public:
